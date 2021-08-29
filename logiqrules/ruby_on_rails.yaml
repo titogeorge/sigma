@@ -1,0 +1,13 @@
+name: ruby_on_rails
+applications: ""
+definitions:
+- name: ruby_on_rails_framework_exceptions
+  description: Detects suspicious Ruby on Rails exceptions that could indicate exploitation
+    attempts
+  condition: message =~ 'ActionController.*.*InvalidAuthenticityToken' || message
+    =~ 'ActionController.*.*InvalidCrossOriginRequest' || message =~ 'ActionController.*.*MethodNotAllowed'
+    || message =~ 'ActionController.*.*BadRequest' || message =~ 'ActionController.*.*ParameterMissing'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

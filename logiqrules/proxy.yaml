@@ -1,0 +1,425 @@
+name: proxy
+applications: ""
+definitions:
+- name: malware_user_agent
+  description: Detects suspicious user agent strings used by malware in proxy logs
+  condition: (([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*rv.*53.0.*.*Gecko.*20100101.*Chrome.*.*53.0'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*5.1.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.0.*.*Windows.*NT.*5.1.*.*Trident.*4.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*Windows.*NT.*5.0.*.*.NET.*CLR.*.*1.1.4322.*'])
+    || ([c-useragent] =~ ['HttpBrowser.*1.0']) || ([c-useragent] =~ ['.*.*.*.*.*'])
+    || ([c-useragent] =~ ['nsis.*inetc.*.*mozilla.*']) || ([c-useragent] =~ ['Wget.*1.9.*cvs.*stable.*.*Red.*Hat.*modified.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*6.1.*.*Trident.*4.0.*.*.NET.*CLR.*1.1.4322.*'])
+    || ([c-useragent] =~ ['.*zeroup.*']) || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*5.1.*.*.*v..*'])
+    || ([c-useragent] =~ ['.*.*adlib.*.*']) || ([c-useragent] =~ ['.*.*tiny']) ||
+    ([c-useragent] =~ ['.*.*BGroom.*.*']) || ([c-useragent] =~ ['.*.*changhuatong'])
+    || ([c-useragent] =~ ['.*.*CholTBAgent']) || ([c-useragent] =~ ['Mozilla.*5.0.*WinInet'])
+    || ([c-useragent] =~ ['RookIE.*1.0']) || ([c-useragent] =~ ['M']) || ([c-useragent]
+    =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*5.1.*.*Trident.*4.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*MSIE.*7.0.*Windows.*NT.*6.0.*'])
+    || ([c-useragent] =~ ['backdoorbot']) || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*en.*US.*.*rv.*1.9.2.3.*.*Gecko.*20100401.*Firefox.*3.6.1.*.*.NET.*CLR.*3.5.30731.*'])
+    || ([c-useragent] =~ ['Opera.*8.81.*.*Windows.*NT.*6.0.*.*U.*.*en.*']) || ([c-useragent]
+    =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*en.*US.*.*rv.*1.9.2.3.*.*Gecko.*20100401.*Firefox.*3.6.1.*.*.NET.*CLR.*3.5.30729.*'])
+    || ([c-useragent] =~ ['Opera']) || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*5.0.*.*Windows.*98.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*5.01.*.*Windows.*NT.*5.0.*'])
+    || ([c-useragent] =~ ['MSIE']) || ([c-useragent] =~ ['.*.*Charon.*.*Inferno.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*5.1.*.*Trident.*5.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.1.*.*Windows.*NT.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*compatible.*.*MSIE.*6.0.*.*Windows.*NT.*5.1.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*10.0.*.*Win64.*.*x64.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*10.0.*.*Win64.*.*x64.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*6.1.*.*Win64.*.*x64.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.0.*.*Windows.*NT.*6.2.*.*WOW64.*.*Trident.*7.0.*.*.NET4.0C.*.*.NET4.0E.*.*InfoPath.3.*'])
+    || ([c-useragent] =~ ['.*.*pxyscand.*']) || ([c-useragent] =~ ['.*.*asd']) ||
+    ([c-useragent] =~ ['.*.*mdms']) || ([c-useragent] =~ ['sample']) || ([c-useragent]
+    =~ ['nocase']) || ([c-useragent] =~ ['Moxilla']) || ([c-useragent] =~ ['Win32.*.*'])
+    || ([c-useragent] =~ ['.*Microsoft.*Internet.*Explorer.*']) || ([c-useragent]
+    =~ ['agent.*.*']) || ([c-useragent] =~ ['AutoIt']) || ([c-useragent] =~ ['IczelionDownLoad'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*9.0.*.*Windows.*NT.*10.0.*.*.NET4.0C.*.*.NET4.0E.*.*Tablet.*PC.*2.0.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: ursnif_malware_download_url_pattern
+  description: Detects download of Ursnif malware done by dropper documents.
+  condition: ([c-uri] =~ ['.*.*.*']) && ([c-uri] =~ ['.*.php.*l=.*']) && ([c-uri]
+    =~ ['.*.cab']) && ([sc-status] == 200)
+  level: critical
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: crypto_miner_user_agent
+  description: Detects suspicious user agent strings used by crypto miners in proxy
+    logs
+  condition: (([c-useragent] =~ ['XMRig.*.*']) || ([c-useragent] =~ ['ccminer.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: cobaltstrike_malformed_uas_in_malleable_profiles
+  description: Detects different malformed user agents used in Malleable Profiles
+    used with Cobalt Strike
+  condition: (([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*Windows.*NT.*5.1.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*Trident.*4.0.*.*SLCC2.*.*.NET.*CLR.*3.0.30729.*.*.NET4.0C.*.*.NET4.0E.*.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*MSIE.*7.0.*.*Windows.*NT.*5.2.*.*Java.*1.5.0.*08']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: cobaltstrike_malleable__ocsp__profile
+  description: Detects Malleable (OCSP) Profile with Typo (OSCP) in URL
+  condition: ([c-uri] =~ ['.*.*oscp.*.*']) && ([cs-host] == ['ocsp.verisign.com'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: ursnif_malware_c2_url_pattern
+  description: Detects Ursnif C2 traffic.
+  condition: (([c-uri] =~ ['.*.*2f.*']) || ([c-uri] =~ ['.*.*2b.*'])) && ([c-uri]
+    =~ ['.*.avi.*']) && ([c-uri] =~ ['.*.*images.*.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1566,001,t1193,execution,t1204,002,command_and_control,t1071
+  exttype: SIEM
+- name: flash_player_update_from_suspicious_location
+  description: Detects a flashplayer update from an unofficial location
+  condition: ([c-uri-query] =~ ['.*.*flash.*install.php.*']) || ([c-uri-query] =~
+    ['.*.*install.*flash.*player.exe']) && ([c-uri-stem] !~ ['.*.adobe.com.*.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1189,execution,t1204,002,defense_evasion,t1036,005
+  exttype: SIEM
+- name: empire_useragent_uri_combo
+  description: Detects user agent and URI paths used by empire agents
+  condition: ([c-useragent] == ['Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0;
+    rv:11.0) like Gecko']) && (([cs-uri-query] =~ ['.*admin.*get.php']) || ([cs-uri-query]
+    =~ ['.*news.php']) || ([cs-uri-query] =~ ['.*login.*process.php'])) && ([cs-method]
+    == ['POST'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: download_from_suspicious_tld
+  description: Detects download of certain file types from hosts in suspicious TLDs
+  condition: (([c-uri-extension] =~ ['exe']) || ([c-uri-extension] =~ ['vbs']) ||
+    ([c-uri-extension] =~ ['bat']) || ([c-uri-extension] =~ ['rar']) || ([c-uri-extension]
+    =~ ['ps1']) || ([c-uri-extension] =~ ['doc']) || ([c-uri-extension] =~ ['docm'])
+    || ([c-uri-extension] =~ ['xls']) || ([c-uri-extension] =~ ['xlsm']) || ([c-uri-extension]
+    =~ ['pptm']) || ([c-uri-extension] =~ ['rtf']) || ([c-uri-extension] =~ ['hta'])
+    || ([c-uri-extension] =~ ['dll']) || ([c-uri-extension] =~ ['ws']) || ([c-uri-extension]
+    =~ ['wsf']) || ([c-uri-extension] =~ ['sct']) || ([c-uri-extension] =~ ['zip']))
+    && (([r-dns] =~ ['.*.country']) || ([r-dns] =~ ['.*.stream']) || ([r-dns] =~ ['.*.gdn'])
+    || ([r-dns] =~ ['.*.mom']) || ([r-dns] =~ ['.*.xin']) || ([r-dns] =~ ['.*.kim'])
+    || ([r-dns] =~ ['.*.men']) || ([r-dns] =~ ['.*.loan']) || ([r-dns] =~ ['.*.download'])
+    || ([r-dns] =~ ['.*.racing']) || ([r-dns] =~ ['.*.online']) || ([r-dns] =~ ['.*.science'])
+    || ([r-dns] =~ ['.*.ren']) || ([r-dns] =~ ['.*.gb']) || ([r-dns] =~ ['.*.win'])
+    || ([r-dns] =~ ['.*.top']) || ([r-dns] =~ ['.*.review']) || ([r-dns] =~ ['.*.vip'])
+    || ([r-dns] =~ ['.*.party']) || ([r-dns] =~ ['.*.tech']) || ([r-dns] =~ ['.*.xyz'])
+    || ([r-dns] =~ ['.*.date']) || ([r-dns] =~ ['.*.faith']) || ([r-dns] =~ ['.*.zip'])
+    || ([r-dns] =~ ['.*.cricket']) || ([r-dns] =~ ['.*.space']) || ([r-dns] =~ ['.*.info'])
+    || ([r-dns] =~ ['.*.vn']) || ([r-dns] =~ ['.*.cm']) || ([r-dns] =~ ['.*.am'])
+    || ([r-dns] =~ ['.*.cc']) || ([r-dns] =~ ['.*.asia']) || ([r-dns] =~ ['.*.ws'])
+    || ([r-dns] =~ ['.*.tk']) || ([r-dns] =~ ['.*.biz']) || ([r-dns] =~ ['.*.su'])
+    || ([r-dns] =~ ['.*.st']) || ([r-dns] =~ ['.*.ro']) || ([r-dns] =~ ['.*.ge'])
+    || ([r-dns] =~ ['.*.ms']) || ([r-dns] =~ ['.*.pk']) || ([r-dns] =~ ['.*.nu'])
+    || ([r-dns] =~ ['.*.me']) || ([r-dns] =~ ['.*.ph']) || ([r-dns] =~ ['.*.to'])
+    || ([r-dns] =~ ['.*.tt']) || ([r-dns] =~ ['.*.name']) || ([r-dns] =~ ['.*.tv'])
+    || ([r-dns] =~ ['.*.kz']) || ([r-dns] =~ ['.*.tc']) || ([r-dns] =~ ['.*.mobi'])
+    || ([r-dns] =~ ['.*.study']) || ([r-dns] =~ ['.*.click']) || ([r-dns] =~ ['.*.link'])
+    || ([r-dns] =~ ['.*.trade']) || ([r-dns] =~ ['.*.accountant']) || ([r-dns] =~
+    ['.*.cf']) || ([r-dns] =~ ['.*.gq']) || ([r-dns] =~ ['.*.ml']) || ([r-dns] =~
+    ['.*.ga']) || ([r-dns] =~ ['.*.pw']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1566,execution,t1203,t1204,002
+  exttype: SIEM
+- name: pwndrp_access
+  description: Detects downloads from PwnDrp web servers developed for red team testing
+    and most likely also used for criminal activity
+  condition: ([c-uri] =~ ['.*.*pwndrop.*.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001,t1043,t1102,003
+  exttype: SIEM
+- name: ios_implant_url_pattern
+  description: Detects URL pattern used by iOS Implant
+  condition: ([c-uri] =~ ['.*.*list.*suc.*name=.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,execution,t1203,collection,t1005,t1119,credential_access,t1528,t1552,001,t1081
+  exttype: SIEM
+- name: empty_user_agent
+  description: Detects suspicious empty user agent strings in proxy logs
+  condition: ([c-useragent] == [''])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001
+  exttype: SIEM
+- name: chafer_malware_url_pattern
+  description: Detects HTTP requests used by Chafer malware
+  condition: ([c-uri] =~ ['.*.*asp.asp.*ui=.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: suspicious_user_agent
+  description: Detects suspicious malformed user agent strings in proxy logs
+  condition: (([c-useragent] =~ ['user.*agent.*']) || ([c-useragent] =~ ['Mozilla.*3.0.*.*'])
+    || ([c-useragent] =~ ['Mozilla.*2.0.*.*']) || ([c-useragent] =~ ['Mozilla.*1.0.*.*'])
+    || ([c-useragent] =~ ['Mozilla.*.*']) || ([c-useragent] =~ ['.*Mozilla.*.*'])
+    || ([c-useragent] =~ ['Mozila.*.*']) || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*MS.*Web.*Services.*Client.*Protocol.*']))
+    || (([c-useragent] =~ ['.*.*.*compatible.*MSIE.*.*']) || ([c-useragent] =~ ['.*.0.*Windows.*NT.*.*']))
+    || (([c-useragent] =~ ['.*']) || ([c-useragent] =~ ['CertUtil.*URL.*Agent']) ||
+    ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*10.0.*.*Win64.*.*x64.*.*rv.*60.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.3.*.*WOW64.*.*rv.*28.0.*.*Gecko.*20100101.*Firefox.*28.0'])
+    || ([c-useragent] =~ ['HTTPS'])) && ([c-useragent] !~ ['Mozilla.*3.0.*.*.*Acrobat.*.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: telegram_api_access
+  description: Detects suspicious requests to Telegram API without the usual Telegram
+    User-Agent
+  condition: (([r-dns] =~ ['api.telegram.org'])) && (([c-useragent] !~ ['.*Telegram.*'])
+    || ([c-useragent] !~ ['.*Bot.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043,t1102,002
+  exttype: SIEM
+- name: exploit_framework_user_agent
+  description: Detects suspicious user agent strings used by exploit / pentest frameworks
+    like Metasploit in proxy logs
+  condition: (([c-useragent] =~ ['Internet.*Explorer.*.*']) || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*Windows.*NT.*5.1.*.*SV1.*.*InfoPath.2.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*Metasploit.*RSPEC.*']) ||
+    ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.1.*.*Windows.*NT.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*Windows.*NT.*5.1.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.0.*.*Windows.*NT.*6.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*6.0.*.*Trident.*4.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.0.*.*Windows.*NT.*6.0.*.*Trident.*4.0.*.*SIMBAR=.*7DB0F6DE.*8DE7.*4841.*9084.*28FA914B0F2E.*.*.*SLCC1.*.*.N'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*compatible.*.*Googlebot.*2.1.*.*.*http.*.*.*www.google.com.*bot.html.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*en.*US.*.*AppleWebKit.*525.13.*.*KHTML.*.*like.*Gecko.*.*Chrome.*4.0.221.6.*Safari.*525.13'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*compatible.*.*MSIE.*9.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*Trident.*5.0.*.*MAAU.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0']) || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*SPIPE.*1.0'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.3.*.*rv.*39.0.*.*Gecko.*20100101.*Firefox.*35.0'])
+    || ([c-useragent] =~ ['Sametime.*Community.*Agent']) || ([c-useragent] =~ ['X.*FORWARDED.*FOR'])
+    || ([c-useragent] =~ ['DotDotPwn.*v2.1']) || ([c-useragent] =~ ['SIPDROID']) ||
+    ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*10.0.*.*Win32.*.*x32.*.*rv.*60.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*6.0.*.*X11.*.*Linux.*x86.*64.*.*rv.*24.0.*.*Gecko.*20140205.*.*.*.*.*Firefox.*27.0.*Iceweasel.*25.3.0'])
+    || ([c-useragent] =~ ['.*wordpress.*hash.*grabber.*']) || ([c-useragent] =~ ['.*exploit.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: windows_powershell_user_agent
+  description: Detects Windows PowerShell Web Access
+  condition: ([c-useragent] =~ ['.*.*WindowsPowerShell.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001
+  exttype: SIEM
+- name: domestic_kitten_furball_malware_pattern
+  description: Detects specific malware patterns used by FurBall malware linked to
+    Iranian Domestic Kitten APT group
+  condition: (([c-uri] =~ ['.*Get.*.*.*AllBrowser.*']) || ([c-uri] =~ ['.*Get.*.*.*HardwareInfo.*'])
+    || ([c-uri] =~ ['.*Take.*.*RecordCall.*']) || ([c-uri] =~ ['.*Reset.*.*.*AllCommand.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control
+  exttype: SIEM
+- name: download_from_suspicious_dyndns_hosts
+  description: Detects download of certain file types from hosts with dynamic DNS
+    names (selected list)
+  condition: (([c-uri-extension] =~ ['exe']) || ([c-uri-extension] =~ ['vbs']) ||
+    ([c-uri-extension] =~ ['bat']) || ([c-uri-extension] =~ ['rar']) || ([c-uri-extension]
+    =~ ['ps1']) || ([c-uri-extension] =~ ['doc']) || ([c-uri-extension] =~ ['docm'])
+    || ([c-uri-extension] =~ ['xls']) || ([c-uri-extension] =~ ['xlsm']) || ([c-uri-extension]
+    =~ ['pptm']) || ([c-uri-extension] =~ ['rtf']) || ([c-uri-extension] =~ ['hta'])
+    || ([c-uri-extension] =~ ['dll']) || ([c-uri-extension] =~ ['ws']) || ([c-uri-extension]
+    =~ ['wsf']) || ([c-uri-extension] =~ ['sct']) || ([c-uri-extension] =~ ['zip']))
+    && (([r-dns] =~ ['.*.hopto.org']) || ([r-dns] =~ ['.*.no.*ip.org']) || ([r-dns]
+    =~ ['.*.no.*ip.info']) || ([r-dns] =~ ['.*.no.*ip.biz']) || ([r-dns] =~ ['.*.no.*ip.com'])
+    || ([r-dns] =~ ['.*.noip.com']) || ([r-dns] =~ ['.*.ddns.name']) || ([r-dns] =~
+    ['.*.myftp.org']) || ([r-dns] =~ ['.*.myftp.biz']) || ([r-dns] =~ ['.*.serveblog.net'])
+    || ([r-dns] =~ ['.*.servebeer.com']) || ([r-dns] =~ ['.*.servemp3.com']) || ([r-dns]
+    =~ ['.*.serveftp.com']) || ([r-dns] =~ ['.*.servequake.com']) || ([r-dns] =~ ['.*.servehalflife.com'])
+    || ([r-dns] =~ ['.*.servehttp.com']) || ([r-dns] =~ ['.*.servegame.com']) || ([r-dns]
+    =~ ['.*.servepics.com']) || ([r-dns] =~ ['.*.myvnc.com']) || ([r-dns] =~ ['.*.ignorelist.com'])
+    || ([r-dns] =~ ['.*.jkub.com']) || ([r-dns] =~ ['.*.dlinkddns.com']) || ([r-dns]
+    =~ ['.*.jumpingcrab.com']) || ([r-dns] =~ ['.*.ddns.info']) || ([r-dns] =~ ['.*.mooo.com'])
+    || ([r-dns] =~ ['.*.dns.*dns.com']) || ([r-dns] =~ ['.*.strangled.net']) || ([r-dns]
+    =~ ['.*.adultdns.net']) || ([r-dns] =~ ['.*.craftx.biz']) || ([r-dns] =~ ['.*.ddns01.com'])
+    || ([r-dns] =~ ['.*.dns53.biz']) || ([r-dns] =~ ['.*.dnsapi.info']) || ([r-dns]
+    =~ ['.*.dnsd.info']) || ([r-dns] =~ ['.*.dnsdynamic.com']) || ([r-dns] =~ ['.*.dnsdynamic.net'])
+    || ([r-dns] =~ ['.*.dnsget.org']) || ([r-dns] =~ ['.*.fe100.net']) || ([r-dns]
+    =~ ['.*.flashserv.net']) || ([r-dns] =~ ['.*.ftp21.net']) || ([r-dns] =~ ['.*.http01.com'])
+    || ([r-dns] =~ ['.*.http80.info']) || ([r-dns] =~ ['.*.https443.com']) || ([r-dns]
+    =~ ['.*.imap01.com']) || ([r-dns] =~ ['.*.kadm5.com']) || ([r-dns] =~ ['.*.mysq1.net'])
+    || ([r-dns] =~ ['.*.ns360.info']) || ([r-dns] =~ ['.*.ntdll.net']) || ([r-dns]
+    =~ ['.*.ole32.com']) || ([r-dns] =~ ['.*.proxy8080.com']) || ([r-dns] =~ ['.*.sql01.com'])
+    || ([r-dns] =~ ['.*.ssh01.com']) || ([r-dns] =~ ['.*.ssh22.net']) || ([r-dns]
+    =~ ['.*.tempors.com']) || ([r-dns] =~ ['.*.tftpd.net']) || ([r-dns] =~ ['.*.ttl60.com'])
+    || ([r-dns] =~ ['.*.ttl60.org']) || ([r-dns] =~ ['.*.user32.com']) || ([r-dns]
+    =~ ['.*.voip01.com']) || ([r-dns] =~ ['.*.wow64.net']) || ([r-dns] =~ ['.*.x64.me'])
+    || ([r-dns] =~ ['.*.xns01.com']) || ([r-dns] =~ ['.*.dyndns.org']) || ([r-dns]
+    =~ ['.*.dyndns.info']) || ([r-dns] =~ ['.*.dyndns.tv']) || ([r-dns] =~ ['.*.dyndns.*at.*home.com'])
+    || ([r-dns] =~ ['.*.dnsomatic.com']) || ([r-dns] =~ ['.*.zapto.org']) || ([r-dns]
+    =~ ['.*.webhop.net']) || ([r-dns] =~ ['.*.25u.com']) || ([r-dns] =~ ['.*.slyip.net']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1105,t1568
+  exttype: SIEM
+- name: apt40_dropbox_tool_user_agent
+  description: Detects suspicious user agent string of APT40 Dropbox tool
+  condition: ([c-useragent] == ['Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36
+    (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36']) && ([r-dns] == ['api.dropbox.com'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001,t1043,exfiltration,t1567,002,t1048
+  exttype: SIEM
+- name: cobaltstrike_malleable_amazon_browsing_traffic_profile
+  description: Detects Malleable Amazon Profile
+  condition: ([c-useragent] == ['Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0;
+    rv:11.0) like Gecko']) && ([cs-host] == ['www.amazon.com']) && ([cs-method] ==
+    ['GET']) && ([c-uri] == ['/s/ref=nb_sb_noss_1/167-3294888-0262949/field-keywords=books'])
+    && ([cs-cookie] =~ ['.*=csm.*hit=s.*24KU11BB82RZSYGJ3BDK.*1419899012996']) ||
+    ([cs-method] == ['POST']) && ([c-uri] == ['/N4215/adj/amzn.us.sr.aps'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: turla_comrat
+  description: Detects Turla ComRAT patterns
+  condition: ([c-uri] =~ ['.*.*index.*index.php.*h=.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043,g0010
+  exttype: SIEM
+- name: babyshark_agent_pattern
+  description: Detects Baby Shark C2 Framework communication patterns
+  condition: ([c-uri] =~ ['.*momyshark.*key=.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: apt_user_agent
+  description: Detects suspicious user agent strings used in APT malware in proxy
+    logs
+  condition: (([c-useragent] =~ ['SJZJ.*.*compatible.*.*MSIE.*6.0.*.*Win32.*']) ||
+    ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6..*.*WOW64.*.*rv.*20.0.*.*Gecko.*20100101.*Firefox.*20.0'])
+    || ([c-useragent] =~ ['User.*Agent.*.*Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*6.1.*.*Trident.*4.0.*.*SLCC'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.4.*.*Win32.*32.*bit.*'])
+    || ([c-useragent] =~ ['webclient']) || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*zh.*EN.*.*rv.*1.7.12.*.*Gecko.*200'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSI.*6.0.*']) || ([c-useragent]
+    =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.3.*.*WOW64.*.*rv.*28.0.*.*Gecko.*20100101.*Firefox.*28.0'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.2.*.*WOW64.*.*rv.*20.0.*.*Gecko.*20100101.*Firefox.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6..*.*WOW64.*.*rv.*20.0.*.*Gecko.*20100101.*Firefox.*2'])
+    || ([c-useragent] =~ ['Mozilla.*4.0']) || ([c-useragent] =~ ['Netscape']) || ([c-useragent]
+    =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*zh.*EN.*.*rv.*1.7.12.*.*Gecko.*20100719.*Firefox.*1.0.7'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*en.*US.*.*rv.*1.9.2.13.*.*Firefox.*3.6.13.*GTB7.1'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*compatible.*.*MSIE.*9.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*Trident.*5.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*Trident.*4.0.*.*SLCC2.*.*.NETCLR.*2.0.50727.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Windows.*NT.*6.0.*.*SV1.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*11.0.*.*Windows.*NT.*6.1.*.*SV1.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*8.0.*.*Win32.*']) ||
+    ([c-useragent] =~ ['Mozilla.*v5.1.*.*Windows.*NT.*6.1.*.*rv.*6.0.1.*.*Gecko.*20100101.*Firefox.*6.0.1'])
+    || ([c-useragent] =~ ['Mozilla.*6.1.*.*compatible.*.*MSIE.*9.0.*.*Windows.*NT.*5.3.*.*Trident.*5.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*Windows.*NT.*5.1.*.*SV1.*.*.NET.*CLR.*1.1.4322.*.*.NET.*CLR.*2.0.50727.*.*.NET.*CLR.*3.0.04506.30.*.*.NET.*CLR.*3.0.04506.648.*.*InfoPath.1.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*WinHttp.*1.6.3.8.*.*WinHTTP.*5.1.*.*like.*Gecko'])
+    || ([c-useragent] =~ ['Mozilla.*v5.1.*.*']) || ([c-useragent] =~ ['MSIE.*8.0'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*7.0.*.*Windows.*NT.*6.1.*.*SLCC2.*.*.NET.*CLR.*2.0.50727.*.*.NET.*CLR.*3.5.30729.*.*.NET.*CLR.*3.0.30729.*.*Media.*Center.*PC.*6.0.*.*.NET4.0C.*.*.NET4.0E.*.*InfoPath.2.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*RMS.*']) || ([c-useragent]
+    =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*DynGate.*']) || ([c-useragent]
+    =~ ['O.*9.27.*.*W.*.*U.*.*Z.*']) || ([c-useragent] =~ ['Mozilla.*5.0.*.*compatible.*.*MSIE.*9.0.*.*Windows.*NT.*6.0.*.*Trident.*5.0.*.*.*Trident.*5.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*9.*.*.*']) || ([c-useragent]
+    =~ ['hots.*scot']) || ([c-useragent] =~ ['Mozilla.*5.0.*.*compatible.*.*MSIE.*10.0.*.*Windows.*NT.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.1.*.*WOW64.*.*Chrome.*28.0.1500.95.*Safari.*537.36'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*Windows.*NT.*6.2.*.*Win32.*.*rv.*47.0.*'])
+    || ([c-useragent] =~ ['Mozilla.*4.0.*.*compatible.*.*MSIE.*6.0.*.*Windows.*NT.*5.1.*SV1.*'])
+    || ([c-useragent] =~ ['Mozilla.*5.0.*.*X11.*.*Linux.*i686.*.*rv.*22.0.*.*Firefox.*22.0']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: raw_paste_service_access
+  description: Detects direct access to raw pastes in different paste services often
+    used by malware in their second stages to download malicious code in encrypted
+    or encoded form
+  condition: (([c-uri] =~ ['.*.paste.ee.*r.*.*']) || ([c-uri] =~ ['.*.pastebin.com.*raw.*.*'])
+    || ([c-uri] =~ ['.*.hastebin.com.*raw.*.*']) || ([c-uri] =~ ['.*.ghostbin.co.*paste.*.*.*raw.*.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001,t1043,t1102,003,defense_evasion
+  exttype: SIEM
+- name: bitsadmin_to_uncommon_tld
+  description: Detects Bitsadmin connections to domains with uncommon TLDs - https://twitter.com/jhencinski/status/1102695118455349248
+    - https://isc.sans.edu/forums/diary/Investigating+Microsoft+BITS+Activity/23281/
+  condition: ([c-useragent] =~ ['Microsoft.*BITS.*.*']) && (([r-dns] !~ ['.*.com'])
+    || ([r-dns] !~ ['.*.net']) || ([r-dns] !~ ['.*.org']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001,defense_evasion,persistence,t1197,s0190
+  exttype: SIEM
+- name: cobaltstrike_malleable_onedrive_browsing_traffic_profile
+  description: Detects Malleable OneDrive Profile
+  condition: ([cs-method] == ['GET']) && ([c-uri] =~ ['.*.*manifest=wac']) && ([cs-host]
+    == ['onedrive.live.com']) && ([c-uri] !~ ['http.*']) && ([c-uri] !~ ['.*.*.*.*onedrive.live.com.*.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: hack_tool_user_agent
+  description: Detects suspicious user agent strings user by hack tools in proxy logs
+  condition: (([c-useragent] =~ ['.*.*hydra.*.*']) || ([c-useragent] =~ ['.*.*arachni.*.*'])
+    || ([c-useragent] =~ ['.*.*BFAC.*.*']) || ([c-useragent] =~ ['.*.*brutus.*.*'])
+    || ([c-useragent] =~ ['.*.*cgichk.*.*']) || ([c-useragent] =~ ['.*core.*project.*1.0.*'])
+    || ([c-useragent] =~ ['.*.*crimscanner.*.*']) || ([c-useragent] =~ ['.*datacha0s.*'])
+    || ([c-useragent] =~ ['.*dirbuster.*']) || ([c-useragent] =~ ['.*domino.*hunter.*'])
+    || ([c-useragent] =~ ['.*dotdotpwn.*']) || ([c-useragent] =~ ['.*FHScan.*Core.*'])
+    || ([c-useragent] =~ ['.*floodgate.*']) || ([c-useragent] =~ ['.*get.*minimal.*'])
+    || ([c-useragent] =~ ['.*gootkit.*auto.*rooter.*scanner.*']) || ([c-useragent]
+    =~ ['.*grendel.*scan.*']) || ([c-useragent] =~ ['.*.*inspath.*.*']) || ([c-useragent]
+    =~ ['.*internet.*ninja.*']) || ([c-useragent] =~ ['.*jaascois.*']) || ([c-useragent]
+    =~ ['.*.*zmeu.*.*']) || ([c-useragent] =~ ['.*masscan.*']) || ([c-useragent] =~
+    ['.*.*metis.*.*']) || ([c-useragent] =~ ['.*morfeus.*fucking.*scanner.*']) ||
+    ([c-useragent] =~ ['.*n.*stealth.*']) || ([c-useragent] =~ ['.*nsauditor.*'])
+    || ([c-useragent] =~ ['.*pmafind.*']) || ([c-useragent] =~ ['.*security.*scan.*'])
+    || ([c-useragent] =~ ['.*springenwerk.*']) || ([c-useragent] =~ ['.*teh.*forest.*lobster.*'])
+    || ([c-useragent] =~ ['.*toata.*dragostea.*']) || ([c-useragent] =~ ['.*.*vega.*.*'])
+    || ([c-useragent] =~ ['.*voideye.*']) || ([c-useragent] =~ ['.*webshag.*']) ||
+    ([c-useragent] =~ ['.*webvulnscan.*']) || ([c-useragent] =~ ['.*.*whcc.*.*'])
+    || ([c-useragent] =~ ['.*.*Havij.*']) || ([c-useragent] =~ ['.*absinthe.*']) ||
+    ([c-useragent] =~ ['.*bsqlbf.*']) || ([c-useragent] =~ ['.*mysqloit.*']) || ([c-useragent]
+    =~ ['.*pangolin.*']) || ([c-useragent] =~ ['.*sql.*power.*injector.*']) || ([c-useragent]
+    =~ ['.*sqlmap.*']) || ([c-useragent] =~ ['.*sqlninja.*']) || ([c-useragent] =~
+    ['.*uil2pn.*']) || ([c-useragent] =~ ['.*ruler.*']) || ([c-useragent] =~ ['.*Mozilla.*5.0.*.*Windows.*.*U.*.*Windows.*NT.*5.1.*.*pt.*PT.*.*rv.*1.9.1.2.*.*Gecko.*20090729.*Firefox.*3.5.2.*.*.NET.*CLR.*3.5.30729.*.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190,credential_access,t1110
+  exttype: SIEM
+- name: windows_webdav_user_agent
+  description: Detects WebDav DownloadCradle
+  condition: ([c-useragent] =~ ['Microsoft.*WebDAV.*MiniRedir.*.*']) && ([cs-method]
+    == ['GET'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001,t1043
+  exttype: SIEM
+- name: download_exe_from_suspicious_tld
+  description: Detects executable downloads from suspicious remote systems
+  condition: (([c-uri-extension] =~ ['exe']) || ([c-uri-extension] =~ ['vbs']) ||
+    ([c-uri-extension] =~ ['bat']) || ([c-uri-extension] =~ ['rar']) || ([c-uri-extension]
+    =~ ['ps1']) || ([c-uri-extension] =~ ['doc']) || ([c-uri-extension] =~ ['docm'])
+    || ([c-uri-extension] =~ ['xls']) || ([c-uri-extension] =~ ['xlsm']) || ([c-uri-extension]
+    =~ ['pptm']) || ([c-uri-extension] =~ ['rtf']) || ([c-uri-extension] =~ ['hta'])
+    || ([c-uri-extension] =~ ['dll']) || ([c-uri-extension] =~ ['ws']) || ([c-uri-extension]
+    =~ ['wsf']) || ([c-uri-extension] =~ ['sct']) || ([c-uri-extension] =~ ['zip']))
+    && (([r-dns] !~ ['.*.com']) || ([r-dns] !~ ['.*.org']) || ([r-dns] !~ ['.*.net'])
+    || ([r-dns] !~ ['.*.edu']) || ([r-dns] !~ ['.*.gov']) || ([r-dns] !~ ['.*.uk'])
+    || ([r-dns] !~ ['.*.ca']) || ([r-dns] !~ ['.*.de']) || ([r-dns] !~ ['.*.jp'])
+    || ([r-dns] !~ ['.*.fr']) || ([r-dns] !~ ['.*.au']) || ([r-dns] !~ ['.*.us'])
+    || ([r-dns] !~ ['.*.ch']) || ([r-dns] !~ ['.*.it']) || ([r-dns] !~ ['.*.nl'])
+    || ([r-dns] !~ ['.*.se']) || ([r-dns] !~ ['.*.no']) || ([r-dns] !~ ['.*.es']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1566,execution,t1203,t1204,002
+  exttype: SIEM

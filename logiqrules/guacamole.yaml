@@ -1,0 +1,10 @@
+name: guacamole
+applications: ""
+definitions:
+- name: guacamole_two_users_sharing_session_anomaly
+  description: Detects suspicious session with two users present
+  condition: message =~ '.*2.*users.*now.*present.*'
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM

@@ -1,0 +1,21 @@
+name: syslog
+applications: ""
+definitions:
+- name: disabling_security_tools
+  description: Detects disabling security tools
+  condition: message =~ '.*stopping.*iptables.*' || message =~ '.*stopping.*ip6tables.*'
+    || message =~ '.*stopping.*firewalld.*' || message =~ '.*stopping.*cbdaemon.*'
+    || message =~ '.*stopping.*falcon.*sensor.*'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,004,t1089
+  exttype: SIEM
+- name: suspicious_named_error
+  description: Detects suspicious DNS error messages that indicate a fatal or suspicious
+    error that could be caused by exploiting attempts
+  condition: message =~ '.*.*dropping.*source.*port.*zero.*packet.*from.*.*' || message
+    =~ '.*.*denied.*AXFR.*from.*.*' || message =~ '.*.*exiting.*.*due.*to.*fatal.*error.*.*'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

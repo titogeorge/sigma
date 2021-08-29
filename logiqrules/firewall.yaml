@@ -1,0 +1,28 @@
+name: firewall
+applications: ""
+definitions:
+- name: equation_group_c2_communication
+  description: Detects communication to C2 servers mentioned in the operational notes
+    of the ShadowBroker leak of EquationGroup C2 tools
+  condition: (([dst_ip] =~ ['69.42.98.86']) || ([dst_ip] =~ ['89.185.234.145'])) ||
+    (([src_ip] =~ ['69.42.98.86']) || ([src_ip] =~ ['89.185.234.145']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,g0020
+  exttype: SIEM
+- name: cleartext_protocol_usage
+  description: Ensure that all account usernames and authentication credentials are
+    transmitted across networks using encrypted channels. Ensure that an encryption
+    is used for all sensitive information in transit. Ensure that an encrypted channels
+    is used  for all administrative account access.
+  condition: (([destination.port] == 8080) || ([destination.port] == 21) || ([destination.port]
+    == 80) || ([destination.port] == 23) || ([destination.port] == 50000) || ([destination.port]
+    == 1521) || ([destination.port] == 27017) || ([destination.port] == 3306) || ([destination.port]
+    == 1433) || ([destination.port] == 11211) || ([destination.port] == 15672) ||
+    ([destination.port] == 5900) || ([destination.port] == 5901) || ([destination.port]
+    == 5902) || ([destination.port] == 5903) || ([destination.port] == 5904)) && (([action]
+    =~ ['forward']) || ([action] =~ ['accept']) || ([action] == 2))
+  level: low
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM

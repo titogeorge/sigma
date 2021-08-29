@@ -1,0 +1,104 @@
+name: aaa
+applications: ""
+definitions:
+- name: cisco_sniffing
+  description: Show when a monitor or a span/rspan is setup or modified
+  condition: message =~ 'monitor.*capture.*point' || message =~ 'set.*span' || message
+    =~ 'set.*rspan'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,discovery,t1040
+  exttype: SIEM
+- name: cisco_file_deletion
+  description: See what files are being deleted from flash file systems
+  condition: message =~ 'erase' || message =~ 'delete' || message =~ 'format'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,impact,t1107,t1070,004,t1488,t1561,001,t1487,002
+  exttype: SIEM
+- name: cisco_stage_data
+  description: Various protocols maybe used to put data on the device for exfil or
+    infil
+  condition: message =~ 'tftp' || message =~ 'rcp' || message =~ 'puts' || message
+    =~ 'copy' || message =~ 'configure.*replace' || message =~ 'archive.*tar'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,collection,lateral_movement,command_and_control,exfiltration,t1074,t1105,t1002,t1560,001
+  exttype: SIEM
+- name: cisco_clear_logs
+  description: Clear command history in network OS which is used for defense evasion
+  condition: message =~ 'clear.*logging' || message =~ 'clear.*archive'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1146,t1070,003
+  exttype: SIEM
+- name: cisco_modify_configuration
+  description: Modifications to a config that will serve an adversary's impacts or
+    persistence
+  condition: message =~ 'ip.*http.*server' || message =~ 'ip.*https.*server' || message
+    =~ 'kron.*policy.*list' || message =~ 'kron.*occurrence' || message =~ 'policy.*list'
+    || message =~ 'access.*list' || message =~ 'ip.*access.*group' || message =~ 'archive.*maximum'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,impact,t1490,t1505,t1493,t1565,002,t1168,t1053
+  exttype: SIEM
+- name: cisco_local_accounts
+  description: Find local accounts being created or modified as well as remote authentication
+    configurations
+  condition: message =~ 'username' || message =~ 'aaa'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence,t1136,001,t1098
+  exttype: SIEM
+- name: cisco_show_commands_input
+  description: See what commands are being input into the device by other people,
+    full credentials can be in the history
+  condition: message =~ 'show.*history' || message =~ 'show.*history.*all' || message
+    =~ 'show.*logging'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1139,t1552,003
+  exttype: SIEM
+- name: cisco_collect_data
+  description: Collect pertinent data from the configuration files
+  condition: message =~ 'show.*running.*config' || message =~ 'show.*startup.*config'
+    || message =~ 'show.*archive.*config' || message =~ 'more'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,credential_access,collection,t1087,001,t1003,t1081,t1552,t1005
+  exttype: SIEM
+- name: cisco_denial_of_service
+  description: Detect a system being shutdown or put into different boot mode
+  condition: message =~ 'shutdown' || message =~ 'config.*register.*0x2100' || message
+    =~ 'config.*register.*0x2142'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact,t1495,t1529,t1492,t1565,001
+  exttype: SIEM
+- name: cisco_crypto_commands
+  description: Show when private keys are being exported from the device, or when
+    new certificates are installed
+  condition: message =~ 'crypto.*pki.*export' || message =~ 'crypto.*pki.*import'
+    || message =~ 'crypto.*pki.*trustpoint'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,defense_evasion,t1130,t1553,004,t1145,t1552
+  exttype: SIEM
+- name: cisco_discovery
+  description: Find information about network devices that is not stored in config
+    files
+  condition: message =~ 'dir' || message =~ 'show.*processes' || message =~ 'show.*arp'
+    || message =~ 'show.*cdp' || message =~ 'show.*version' || message =~ 'show.*ip.*route'
+    || message =~ 'show.*ip.*interface' || message =~ 'show.*ip.*sockets' || message
+    =~ 'show.*users' || message =~ 'show.*ssh' || message =~ 'show.*clock'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1083,t1201,t1057,t1018,t1082,t1016,t1049,t1033,t1124
+  exttype: SIEM
+- name: cisco_disabling_logging
+  description: Turn off logging locally or remote
+  condition: message =~ 'no.*logging' || message =~ 'no.*aaa.*new.*model'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1089,t1562,001
+  exttype: SIEM

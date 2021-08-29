@@ -1,0 +1,57 @@
+name: dce_rpc
+applications: ""
+definitions:
+- name: mitre_bzar_indicators_for_execution
+  description: Windows DCE-RPC functions which indicate an execution techniques on
+    the remote system. All credit for the Zeek mapping of the suspicious endpoint/operation
+    field goes to MITRE
+  condition: ([endpoint] == ['JobAdd']) && ([operation] == ['atsvc']) || ([endpoint]
+    == ['ITaskSchedulerService']) && ([operation] == ['SchRpcEnableTask']) || ([endpoint]
+    == ['ITaskSchedulerService']) && ([operation] == ['SchRpcRegisterTask']) || ([endpoint]
+    == ['ITaskSchedulerService']) && ([operation] == ['SchRpcRun']) || ([endpoint]
+    == ['IWbemServices']) && ([operation] == ['ExecMethod']) || ([endpoint] == ['IWbemServices'])
+    && ([operation] == ['ExecMethodAsync']) || ([endpoint] == ['svcctl']) && ([operation]
+    == ['CreateServiceA']) || ([endpoint] == ['svcctl']) && ([operation] == ['CreateServiceW'])
+    || ([endpoint] == ['svcctl']) && ([operation] == ['StartServiceA']) || ([endpoint]
+    == ['svcctl']) && ([operation] == ['StartServiceW'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1035,t1047,t1053,002,t1569
+  exttype: SIEM
+- name: potential_petitpotam_attack_via_efs_rpc_calls
+  description: |
+    Detects usage of the windows RPC library Encrypting File System Remote Protocol (MS-EFSRPC). Variations of this RPC are used within the attack refereed to as PetitPotam.
+    The usage of this RPC function should be rare if ever used at all.
+    Thus usage of this function is uncommon enough that any usage of this RPC function should warrant further investigation to determine if it is legitimate.
+     View surrounding logs (within a few minutes before and after) from the Source IP to. Logs from from the Source IP would include dce_rpc, smb_mapping, smb_files, rdp, ntlm, kerberos, etc..'
+  condition: (([operation] =~ ['Efs.*']) || ([operation] =~ ['efs.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,t1557,001,t1187
+  exttype: SIEM
+- name: mitre_bzar_indicators_for_persistence
+  description: Windows DCE-RPC functions which indicate a persistence techniques on
+    the remote system. All credit for the Zeek mapping of the suspicious endpoint/operation
+    field goes to MITRE.
+  condition: ([endpoint] == ['spoolss']) && ([operation] == ['RpcAddMonitor']) ||
+    ([endpoint] == ['spoolss']) && ([operation] == ['RpcAddPrintProcessor']) || ([endpoint]
+    == ['IRemoteWinspool']) && ([operation] == ['RpcAsyncAddMonitor']) || ([endpoint]
+    == ['IRemoteWinspool']) && ([operation] == ['RpcAsyncAddPrintProcessor']) || ([endpoint]
+    == ['ISecLogon']) && ([operation] == ['SeclCreateProcessWithLogonW']) || ([endpoint]
+    == ['ISecLogon']) && ([operation] == ['SeclCreateProcessWithLogonExW'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,t1004,t1547,004
+  exttype: SIEM
+- name: possible_printnightmare_print_driver_install
+  description: |
+    Detects the remote installation of a print driver which is possible indication of the exploitation of PrintNightmare (CVE-2021-1675).
+    The occurrence of print drivers being installed remotely via RPC functions should be rare, as print drivers are normally installed locally and or through group policy.
+  condition: (([operation] =~ ['RpcAsyncInstallPrinterDriverFromPackage']) || ([operation]
+    =~ ['RpcAsyncAddPrintProcessor']) || ([operation] =~ ['RpcAddPrintProcessor'])
+    || ([operation] =~ ['RpcAddPrinterDriverEx']) || ([operation] =~ ['RpcAddPrinterDriver'])
+    || ([operation] =~ ['RpcAsyncAddPrinterDriver']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution
+  exttype: SIEM

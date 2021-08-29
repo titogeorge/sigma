@@ -1,0 +1,13 @@
+name: Microsoft-ServiceBus-Client
+applications: ""
+definitions:
+- name: hybridconnectionmanager_service_running
+  description: Rule to detect the Hybrid Connection Manager service running on an
+    endpoint.
+  condition: (([EventID] == 40300) || ([EventID] == 40301) || ([EventID] == 40302))
+    && message =~ 'HybridConnection' || message =~ 'sb.*.*.*' || message =~ 'servicebus.windows.net'
+    || message =~ 'HybridConnectionManage'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence
+  exttype: SIEM

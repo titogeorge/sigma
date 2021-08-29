@@ -1,0 +1,12 @@
+name: printservice-operational
+applications: ""
+definitions:
+- name: cve_2021_1675_print_spooler_exploitation
+  description: Detects driver load events print service operational log that are a
+    sign of successful exploitation attempts against print spooler vulnerability CVE-2021-1675
+  condition: ([EventID] == ['316']) && message =~ 'UNIDRV.DLL.*.*kernelbase.dll.*.*'
+    || message =~ '.*123.*' || message =~ '.*1234.*' || message =~ 'mimispool'
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,execution
+  exttype: SIEM

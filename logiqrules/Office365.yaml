@@ -1,0 +1,12 @@
+name: Office365
+applications: ""
+definitions:
+- name: microsoft_365___impossible_travel_activity
+  description: Detects when a Microsoft Cloud App Security reported a risky sign-in
+    attempt due to a login associated with an impossible travel.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Impossible
+    travel activity']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1078
+  exttype: SIEM

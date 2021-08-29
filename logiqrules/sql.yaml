@@ -1,0 +1,12 @@
+name: sql
+applications: ""
+definitions:
+- name: suspicious_sql_error_messages
+  description: Detects SQL error messages that indicate probing for an injection attack
+  condition: message =~ 'quoted.*string.*not.*properly.*terminated' || message =~
+    'You.*have.*an.*error.*in.*your.*SQL.*syntax' || message =~ 'Unclosed.*quotation.*mark'
+    || message =~ 'near.*.*.*.*.*.*syntax.*error' || message =~ 'SELECTs.*to.*the.*left.*and.*right.*of.*UNION.*do.*not.*have.*the.*same.*number.*of.*result.*columns'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

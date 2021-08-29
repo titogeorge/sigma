@@ -1,0 +1,330 @@
+name: linux
+applications: ""
+definitions:
+- name: setuid_and_setgid
+  description: Detects suspicious change of file privileges with chown and chmod commands
+  condition: message =~ '.*chown.*root.*' && message =~ '.*.*chmod.*u.*s.*' || message
+    =~ '.*.*chmod.*g.*s.*'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence
+  exttype: SIEM
+- name: connection_proxy
+  description: Detects setting proxy
+  condition: message =~ 'http.*proxy=.*' || message =~ 'https.*proxy=.*'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,defense_evasion
+  exttype: SIEM
+- name: decode_base64_encoded_text
+  description: Detects usage of base64 utility to decode arbitrary base64-encoded
+    text
+  condition: ([Image] =~ ['.*.*base64']) && ([CommandLine] =~ ['.*.*d.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1027
+  exttype: SIEM
+- name: file_deletion
+  description: Detects file deletion commands
+  condition: (([Image] =~ ['.*.*rm']) || ([Image] =~ ['.*.*shred']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,004
+  exttype: SIEM
+- name: system_network_connections_discovery
+  description: Detects usage of system utilities to discover system network connections
+  condition: (([Image] =~ ['.*.*who']) || ([Image] =~ ['.*.*w']) || ([Image] =~ ['.*.*last'])
+    || ([Image] =~ ['.*.*lsof']) || ([Image] =~ ['.*.*netstat']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1049
+  exttype: SIEM
+- name: jexboss_command_sequence
+  description: Detects suspicious command sequence that JexBoss
+  condition: message =~ 'bash.*.*c.*.*bin.*bash' && message =~ '.*.*dev.*tcp.*'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,004
+  exttype: SIEM
+- name: scheduled_task_job_at
+  description: Detects the use of at/atd
+  condition: (([ProcessName] =~ ['.*.*at']) || ([ProcessName] =~ ['.*.*atd']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence,t1053,001
+  exttype: SIEM
+- name: suspicious_reverse_shell_command_line
+  description: Detects suspicious shell commands or program code that may be executed
+    or used in command line to establish a reverse shell
+  condition: message =~ 'BEGIN.*.*s.*=.*.*.*inet.*tcp.*0.*' || message =~ 'bash.*.*i.*.*.*.*.*dev.*tcp.*'
+    || message =~ 'bash.*.*i.*.*.*.*.*dev.*udp.*' || message =~ 'sh.*.*i.*.*.*.*.*dev.*udp.*'
+    || message =~ 'sh.*.*i.*.*.*.*.*dev.*tcp.*' || message =~ '.*.*.*while.*read.*line.*0.*.*5.*.*do'
+    || message =~ '.*bin.*bash.*.*c.*exec.*5.*.*.*dev.*tcp.*' || message =~ '.*bin.*bash.*.*c.*exec.*5.*.*.*dev.*udp.*'
+    || message =~ 'nc.*.*e.*.*bin.*sh.*' || message =~ '.*bin.*sh.*.*.*nc' || message
+    =~ 'rm.*.*f.*backpipe.*.*mknod.*.*tmp.*backpipe.*p.*.*.*.*nc.*' || message =~
+    '.*socket.*S.*PF.*INET.*SOCK.*STREAM.*getprotobyname.*.*tcp.*.*.*.*if.*connect.*S.*sockaddr.*in.*.*p.*inet.*aton.*.*i.*.*.*.*'
+    || message =~ '.*STDIN.*.*fdopen.*.*c.*r.*.*.*.*.*.*fdopen.*.*c.*w.*.*system.*.*.*while.*.*.*'
+    || message =~ '.*bin.*sh.*.*i.*.*.*3.*.*.*3.*2.*.*3' || message =~ 'uname.*.*a.*.*w.*.*id.*.*.*bin.*bash.*.*i'
+    || message =~ '.*sendbyte.*=.*.*.*text.encoding.*.*.*ASCII.*.GetBytes.*.*sendback2.*.*.*.*stream.Write.*.*sendbyte.*0.*.*sendbyte.Length.*.*.*.*stream.Flush.*.*.*.*'
+    || message =~ '.*os.dup2.*s.fileno.*.*.*0.*.*os.dup2.*s.fileno.*.*.*1.*.*os.dup2.*s.fileno.*.*.*2.*.*os.putenv.*.*HISTFILE.*.*.*.*dev.*null.*.*.*'
+    || message =~ '.to.*i.*exec.*sprintf.*.*.*bin.*sh.*.*i.*.*.*.*d.*.*.*.*d.*2.*.*.*d.*.*f.*f.*f.*'
+    || message =~ '.*while.*cmd=c.gets.*.*IO.popen.*cmd.*.*r.*.*.*.*io.*c.print' ||
+    message =~ 'socat.*exec.*.*bash.*.*li.*.*pty.*stderr.*setsid.*sigint.*sane.*tcp.*'
+    || message =~ 'rm.*.*f.*.*tmp.*p.*.*mknod.*.*tmp.*p.*p.*.*.*' || message =~ '.*.*.*.*bin.*bash.*.*.*telnet.*'
+    || message =~ '.*echo=0.*raw.*tcp.*listen.*' || message =~ 'nc.*.*lvvp.*' || message
+    =~ 'xterm.*.*display.*1'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,004
+  exttype: SIEM
+- name: local_groups_discovery
+  description: Detects enumeration of local system groups
+  condition: (([Image] =~ ['.*.*groups'])) || (([Image] =~ ['.*.*cat'])) && (([CommandLine]
+    =~ ['.*.*etc.*group.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1069,001
+  exttype: SIEM
+- name: disabling_security_tools
+  description: Detects disabling security tools
+  condition: ([Image] =~ ['.*.*service']) && ([CommandLine] =~ ['.*iptables.*']) &&
+    ([CommandLine] =~ ['.*stop.*']) || ([Image] =~ ['.*.*service']) && ([CommandLine]
+    =~ ['.*ip6tables.*']) && ([CommandLine] =~ ['.*stop.*']) || ([Image] =~ ['.*.*chkconfig'])
+    && ([CommandLine] =~ ['.*iptables.*']) && ([CommandLine] =~ ['.*stop.*']) || ([Image]
+    =~ ['.*.*chkconfig']) && ([CommandLine] =~ ['.*ip6tables.*']) && ([CommandLine]
+    =~ ['.*stop.*']) || ([Image] =~ ['.*.*systemctl']) && ([CommandLine] =~ ['.*firewalld.*'])
+    && ([CommandLine] =~ ['.*stop.*']) || ([Image] =~ ['.*.*systemctl']) && ([CommandLine]
+    =~ ['.*firewalld.*']) && ([CommandLine] =~ ['.*disable.*']) || ([Image] =~ ['.*.*service'])
+    && ([CommandLine] =~ ['.*cbdaemon.*']) && ([CommandLine] =~ ['.*stop.*']) || ([Image]
+    =~ ['.*.*chkconfig']) && ([CommandLine] =~ ['.*cbdaemon.*']) && ([CommandLine]
+    =~ ['.*off.*']) || ([Image] =~ ['.*.*systemctl']) && ([CommandLine] =~ ['.*cbdaemon.*'])
+    && ([CommandLine] =~ ['.*stop.*']) || ([Image] =~ ['.*.*systemctl']) && ([CommandLine]
+    =~ ['.*cbdaemon.*']) && ([CommandLine] =~ ['.*disable.*']) || ([Image] =~ ['.*.*setenforce'])
+    && ([CommandLine] =~ ['.*0.*']) || ([Image] =~ ['.*.*systemctl']) && ([CommandLine]
+    =~ ['.*stop.*']) && ([CommandLine] =~ ['.*falcon.*sensor.*']) || ([Image] =~ ['.*.*systemctl'])
+    && ([CommandLine] =~ ['.*disable.*']) && ([CommandLine] =~ ['.*falcon.*sensor.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,004,t1089
+  exttype: SIEM
+- name: sudo_privilege_escalation_cve_2019_14287
+  description: Detects users trying to exploit sudo vulnerability reported in CVE-2019-14287
+  condition: message =~ '.*.*.*u.*.*'
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1068,t1169,t1548,003
+  exttype: SIEM
+- name: sudo_privilege_escalation_cve_2019_14287
+  description: Detects users trying to exploit sudo vulnerability reported in CVE-2019-14287
+  condition: (([USER] =~ ['.*.*.*']) || ([USER] =~ ['.*.*4294967295']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1068,t1169,t1548,003
+  exttype: SIEM
+- name: clear_linux_logs
+  description: Detects clear logs
+  condition: (([Image] =~ ['.*.*rm']) || ([Image] =~ ['.*.*shred'])) && (([CommandLine]
+    =~ ['.*.*var.*log.*']) || ([CommandLine] =~ ['.*.*var.*spool.*mail.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,002
+  exttype: SIEM
+- name: system_information_discovery
+  description: Detects system information discovery commands
+  condition: (([Image] =~ ['.*.*uname']) || ([Image] =~ ['.*.*hostname']) || ([Image]
+    =~ ['.*.*uptime']) || ([Image] =~ ['.*.*lspci']) || ([Image] =~ ['.*.*dmidecode'])
+    || ([Image] =~ ['.*.*lscpu']) || ([Image] =~ ['.*.*lsmod']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1082
+  exttype: SIEM
+- name: remote_file_copy
+  description: Detects the use of tools that copy files from or to remote systems
+  condition: message =~ 'scp.*' || message =~ 'rsync.*' || message =~ 'sftp.*' &&
+    message =~ '.*' || message =~ '.*'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,command_and_control,lateral_movement,t1105
+  exttype: SIEM
+- name: linux_remote_system_discovery
+  description: Detects the enumeration of other remote systems.
+  condition: ([Image] =~ ['.*.*arp']) && ([CommandLine] =~ ['.*.*a.*']) || ([Image]
+    =~ ['.*.*ping']) && (([CommandLine] =~ ['.*.*10..*']) || ([CommandLine] =~ ['.*.*192.168..*'])
+    || ([CommandLine] =~ ['.*.*172.16..*']) || ([CommandLine] =~ ['.*.*172.17..*'])
+    || ([CommandLine] =~ ['.*.*172.18..*']) || ([CommandLine] =~ ['.*.*172.19..*'])
+    || ([CommandLine] =~ ['.*.*172.20..*']) || ([CommandLine] =~ ['.*.*172.21..*'])
+    || ([CommandLine] =~ ['.*.*172.22..*']) || ([CommandLine] =~ ['.*.*172.23..*'])
+    || ([CommandLine] =~ ['.*.*172.24..*']) || ([CommandLine] =~ ['.*.*172.25..*'])
+    || ([CommandLine] =~ ['.*.*172.26..*']) || ([CommandLine] =~ ['.*.*172.27..*'])
+    || ([CommandLine] =~ ['.*.*172.28..*']) || ([CommandLine] =~ ['.*.*172.29..*'])
+    || ([CommandLine] =~ ['.*.*172.30..*']) || ([CommandLine] =~ ['.*.*172.31..*'])
+    || ([CommandLine] =~ ['.*.*127..*']) || ([CommandLine] =~ ['.*.*169.254..*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1018
+  exttype: SIEM
+- name: clear_command_history
+  description: Clear command history in linux which is used for defense evasion.
+  condition: message =~ 'rm.*.*bash.*history' || message =~ 'echo.*.*.*.*.*.*.*bash.*history'
+    || message =~ 'cat.*.*dev.*null.*.*.*.*bash.*history' || message =~ 'ln.*.*sf.*.*dev.*null.*.*bash.*history'
+    || message =~ 'truncate.*.*s0.*.*bash.*history' || message =~ 'export.*HISTFILESIZE=0'
+    || message =~ 'history.*.*c' || message =~ 'history.*.*w' || message =~ 'shred.*.*bash.*history'
+    || message =~ 'empty.*bash.*history'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,003
+  exttype: SIEM
+- name: shellshock_expression
+  description: Detects shellshock expressions in log files
+  condition: message =~ '.*.*.*.*.*.*.*' || message =~ '.*.*.*.*.*.*.*.*' || message
+    =~ '.*.*.*.*.*.*.*.*.*' || message =~ '.*.*.*.*.*.*.*.*.*.*'
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: space_after_filename
+  description: Detects space after filename
+  condition: message =~ 'echo.*.*.*.*.*.*.*.*.*.*.*.*chmod.*.*x.*.*' && message =~
+    'mv.*.*.*.*.*.*.*'
+  level: low
+  ruletype: EVALUATE
+  tags: attack,execution
+  exttype: SIEM
+- name: linux_network_service_scanning
+  description: Detects enumeration of local or remote network services.
+  condition: (([Image] =~ ['.*.*nc']) || ([Image] =~ ['.*.*netcat'])) && ([CommandLine]
+    !~ ['.*l.*']) || (([Image] =~ ['.*.*telnet']) || ([Image] =~ ['.*.*nmap']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1046
+  exttype: SIEM
+- name: suspicious_activity_in_shell_commands
+  description: Detects suspicious shell commands used in various exploit codes (see
+    references)
+  condition: message =~ 'wget.*.*.*.*.*http.*.*.*.*perl' || message =~ 'wget.*.*.*.*.*http.*.*.*.*sh'
+    || message =~ 'wget.*.*.*.*.*http.*.*.*.*bash' || message =~ 'python.*.*m.*SimpleHTTPServer'
+    || message =~ '.*m.*http.server' || message =~ 'import.*pty.*.*pty.spawn.*' ||
+    message =~ 'socat.*exec.*.*' || message =~ 'socat.*.*O.*.*tmp.*.*' || message
+    =~ 'socat.*tcp.*connect.*' || message =~ '.*echo.*binary.*.*.*.*' || message =~
+    '.*wget.*.*.*.*chmod.*.*x.*' || message =~ '.*wget.*.*.*.*chmod.*777.*.*' || message
+    =~ '.*cd.*.*tmp.*.*.*.*cd.*.*var.*run.*.*.*.*cd.*.*mnt.*' || message =~ '.*stop.*service.*iptables.*stop.*.*'
+    || message =~ '.*stop.*SuSEfirewall2.*stop.*.*' || message =~ 'chmod.*777.*2020.*'
+    || message =~ '.*.*.*.*etc.*rc.local' || message =~ '.*base64.*.*d.*.*tmp.*.*'
+    || message =~ '.*.*.*.*base64.*.*d.*.*' || message =~ '.*.*chmod.*u.*s.*.*' ||
+    message =~ '.*chmod.*.*s.*.*tmp.*.*' || message =~ '.*chmod.*u.*s.*.*tmp.*.*'
+    || message =~ '.*.*.*tmp.*haxhax.*' || message =~ '.*.*.*tmp.*ns.*sploit.*' ||
+    message =~ 'nc.*.*l.*.*p.*.*' || message =~ 'cp.*.*bin.*ksh.*.*' || message =~
+    'cp.*.*bin.*sh.*.*' || message =~ '.*.*.*tmp.*.*.b64.*.*' || message =~ '.*.*tmp.*ysocereal.jar.*'
+    || message =~ '.*.*tmp.*x.*.*' || message =~ '.*.*.*chmod.*.*x.*.*tmp.*.*' ||
+    message =~ '.*.*chmod.*.*x.*.*tmp.*.*'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,004
+  exttype: SIEM
+- name: system_network_discovery___linux
+  description: Detects enumeration of local network configuration
+  condition: (([Image] =~ ['.*.*firewall.*cmd']) || ([Image] =~ ['.*.*ufw']) || ([Image]
+    =~ ['.*.*iptables']) || ([Image] =~ ['.*.*netstat']) || ([Image] =~ ['.*.*ss'])
+    || ([Image] =~ ['.*.*ip']) || ([Image] =~ ['.*.*ifconfig']) || ([Image] =~ ['.*.*systemd.*resolve'])
+    || ([Image] =~ ['.*.*route'])) || ([CommandLine] =~ ['.*.*etc.*resolv.conf.*'])
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1016
+  exttype: SIEM
+- name: local_system_accounts_discovery
+  description: Detects enumeration of local systeam accounts
+  condition: (([Image] =~ ['.*.*lastlog'])) || (([CommandLine] =~ ['.*.*x.*0.*.*.*']))
+    || (([Image] =~ ['.*.*cat'])) && (([CommandLine] =~ ['.*.*etc.*passwd.*']) ||
+    ([CommandLine] =~ ['.*.*etc.*sudoers.*'])) || (([Image] =~ ['.*.*id'])) || (([Image]
+    =~ ['.*.*lsof'])) && (([CommandLine] =~ ['.*.*u.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1087,001
+  exttype: SIEM
+- name: process_discovery
+  description: Detects process discovery commands
+  condition: (([Image] =~ ['.*.*ps']) || ([Image] =~ ['.*.*top']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1057
+  exttype: SIEM
+- name: code_injection_by_ld_so_preload
+  description: Detects the ld.so preload persistence file. See `man ld.so` for more
+    information.
+  condition: message =~ '.*etc.*ld.so.preload'
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: symlink_etc_passwd
+  description: Detects suspicious command lines that look as if they would create
+    symbolic links to /etc/passwd
+  condition: message =~ 'ln.*.*s.*.*f.*.*etc.*passwd' || message =~ 'ln.*.*s.*.*etc.*passwd'
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: security_software_discovery
+  description: Detects usage of system utilities (only grep for now) to discover security
+    software discovery
+  condition: ([Image] =~ ['.*.*grep']) && (([CommandLine] =~ ['.*nessusd.*']) || ([CommandLine]
+    =~ ['.*td.*agent.*']) || ([CommandLine] =~ ['.*packetbeat.*']) || ([CommandLine]
+    =~ ['.*filebeat.*']) || ([CommandLine] =~ ['.*auditbeat.*']) || ([CommandLine]
+    =~ ['.*osqueryd.*']) || ([CommandLine] =~ ['.*cbagentd.*']) || ([CommandLine]
+    =~ ['.*falcond.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1518,001
+  exttype: SIEM
+- name: equation_group_indicators
+  description: Detects suspicious shell commands used in various Equation Group scripts
+    and tools
+  condition: message =~ 'chown.*root.*chmod.*4777.*' || message =~ 'cp.*.*bin.*sh.*..*chown'
+    || message =~ 'chmod.*4777.*.*tmp.*.scsi.*dev.*bin.*gsh' || message =~ 'chown.*root.*root.*.*tmp.*.scsi.*dev.*bin.*'
+    || message =~ 'chown.*root.*root.*x.*' || message =~ '.*bin.*telnet.*locip.*locport.*.*.*.*dev.*console.*.*.*.*bin.*sh'
+    || message =~ '.*tmp.*ratload' || message =~ 'ewok.*.*t.*' || message =~ 'xspy.*.*display.*'
+    || message =~ 'cat.*.*.*.*dev.*tcp.*127.0.0.1.*80.*.*.*END' || message =~ 'rm.*.*f.*.*current.*tmp.*ftshell.latest'
+    || message =~ 'ghost.*.*.*.*v.*' || message =~ '.*.*.*wipe.*.*.*.*dev.*null' ||
+    message =~ 'ping.*.*c.*2.*.*.*.*grep.*.*.*.*proc.*net.*arp.*.*.*tmp.*gx' || message
+    =~ 'iptables.*.*.*OUTPUT.*.*p.*tcp.*.*d.*127.0.0.1.*.*.*tcp.*flags.*RST.*RST.*.*j.*DROP.*'
+    || message =~ '.*.*.*var.*log.*audit.*audit.log.*.*rm.*.*f.*.' || message =~ 'cp.*.*var.*log.*audit.*audit.log.*.tmp'
+    || message =~ 'sh.*.*.*dev.*tcp.*.*.*.*.*1.*2.*.*1' || message =~ 'ncat.*.*vv.*.*l.*.*p.*.*.*.*'
+    || message =~ 'nc.*.*vv.*.*l.*.*p.*.*.*.*' || message =~ '.*.*.*dev.*console.*.*.*uudecode.*.*.*.*uncompress'
+    || message =~ 'sendmail.*.*osendmail.*chmod.*.*x.*sendmail' || message =~ '.*usr.*bin.*wget.*.*O.*.*tmp.*a.*http.*.*.*.*.*chmod.*755.*.*tmp.*cron'
+    || message =~ 'chmod.*666.*.*var.*run.*utmp.*' || message =~ 'chmod.*700.*nscd.*crond'
+    || message =~ 'cp.*.*etc.*shadow.*.*tmp.*.' || message =~ '.*.*dev.*console.*.*uudecode.*.*.*.*dev.*null.*2.*.*1.*.*.*.*uncompress'
+    || message =~ 'chmod.*700.*jp.*.*netstat.*.*an.*grep' || message =~ 'uudecode.*.*.*.*dev.*null.*2.*.*1.*.*.*.*uncompress.*.*f.*.*.*.*.*.*chmod.*755'
+    || message =~ 'chmod.*700.*crond' || message =~ 'wget.*http.*.*.*chmod.*.*x.*.*tmp.*sendmail'
+    || message =~ 'chmod.*700.*fp.*sendmail.*pt' || message =~ 'chmod.*755.*.*usr.*vmsys.*bin.*pipe'
+    || message =~ 'chmod.*.*R.*755.*.*usr.*vmsys' || message =~ 'chmod.*755.*.*opbin.*.*tunnel'
+    || message =~ 'chmod.*700.*sendmail' || message =~ 'chmod.*0700.*sendmail' ||
+    message =~ '.*usr.*bin.*wget.*http.*sendmail.*chmod.*.*x.*sendmail.*' || message
+    =~ '.*.*.*telnet.*.*.*2.*.*1.*.*.*dev.*console'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,g0020,t1059,004
+  exttype: SIEM
+- name: suspicious_log_entries
+  description: Detects suspicious log entries in Linux log files
+  condition: message =~ 'entered.*promiscuous.*mode' || message =~ 'Deactivating.*service'
+    || message =~ 'Oversized.*packet.*received.*from' || message =~ 'imuxsock.*begins.*to.*drop.*messages'
+  level: medium
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: install_root_certificate
+  description: Detects installed new certificate
+  condition: (([Image] =~ ['.*.*update.*ca.*certificates']) || ([Image] =~ ['.*.*update.*ca.*trust']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1553,004
+  exttype: SIEM
+- name: scheduled_cron_task_job
+  description: Detects abuse of the cron utility to perform task scheduling for initial
+    or recurring execution of malicious code. Detection will focus on crontab jobs
+    uploaded from the tmp folder.
+  condition: (([Image] =~ ['.*crontab'])) && (([CommandLine] =~ ['.*.*tmp.*.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,persistence,privilege_escalation,t1053,003
+  exttype: SIEM

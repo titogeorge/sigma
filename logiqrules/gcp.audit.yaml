@@ -1,0 +1,108 @@
+name: gcp.audit
+applications: ""
+definitions:
+- name: google_cloud_service_account_disabled_or_deleted
+  description: Identifies when a service account is disabled or deleted in Google
+    Cloud.
+  condition: (([gcp.audit.method_name] =~ ['.*.serviceAccounts.disable']) || ([gcp.audit.method_name]
+    =~ ['.*.serviceAccounts.delete']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact,t1531
+  exttype: SIEM
+- name: google_full_network_traffic_packet_capture
+  description: Identifies potential full network packet capture in gcp. This feature
+    can potentially be abused to read sensitive data from unencrypted internal traffic.
+  condition: (([gcp.audit.method_name] =~ ['v.*.Compute.PacketMirrorings.Get']) ||
+    ([gcp.audit.method_name] =~ ['v.*.Compute.PacketMirrorings.Delete']) || ([gcp.audit.method_name]
+    =~ ['v.*.Compute.PacketMirrorings.Insert']) || ([gcp.audit.method_name] =~ ['v.*.Compute.PacketMirrorings.Patch'])
+    || ([gcp.audit.method_name] =~ ['v.*.Compute.PacketMirrorings.List']) || ([gcp.audit.method_name]
+    =~ ['v.*.Compute.PacketMirrorings.aggregatedList']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1074
+  exttype: SIEM
+- name: google_cloud_kubernetes_secrets_modified_or_deleted
+  description: Identifies when the Secrets are Modified or Deleted.
+  condition: (([gcp.audit.method_name] =~ ['io.k8s.core.v.*.secrets.create']) || ([gcp.audit.method_name]
+    =~ ['io.k8s.core.v.*.secrets.update']) || ([gcp.audit.method_name] =~ ['io.k8s.core.v.*.secrets.patch'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.core.v.*.secrets.delete']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access
+  exttype: SIEM
+- name: google_cloud_firewall_modified_or_deleted
+  description: Detects  when a firewall rule is modified or deleted in Google Cloud
+    Platform (GCP).
+  condition: (([gcp.audit.method_name] =~ ['v.*.Compute.Firewalls.Delete']) || ([gcp.audit.method_name]
+    =~ ['v.*.Compute.Firewalls.Patch']) || ([gcp.audit.method_name] =~ ['v.*.Compute.Firewalls.Update'])
+    || ([gcp.audit.method_name] =~ ['v.*.Compute.Firewalls.Insert']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562
+  exttype: SIEM
+- name: google_cloud_storage_buckets_modified_or_deleted
+  description: Detects when storage bucket is modified or deleted in Google Cloud.
+  condition: (([gcp.audit.method_name] =~ ['storage.buckets.delete']) || ([gcp.audit.method_name]
+    =~ ['storage.buckets.insert']) || ([gcp.audit.method_name] =~ ['storage.buckets.update'])
+    || ([gcp.audit.method_name] =~ ['storage.buckets.patch']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: google_cloud_kubernetes_rolebinding
+  description: Detects the creation or patching of potential malicious RoleBinding.
+    This includes RoleBindings and ClusterRoleBinding.
+  condition: (([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.clusterrolebindings.create'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.rolebindings.create'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.clusterrolebindings.patch'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.rolebindings.patch'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.clusterrolebindings.update'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.rolebindings.update'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.clusterrolebindings.delete'])
+    || ([gcp.audit.method_name] =~ ['io.k8s.authorization.rbac.v.*.rolebindings.delete']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access
+  exttype: SIEM
+- name: google_cloud_service_account_modified
+  description: Identifies when a service account is modified in Google Cloud.
+  condition: (([gcp.audit.method_name] =~ ['.*.serviceAccounts.patch']) || ([gcp.audit.method_name]
+    =~ ['.*.serviceAccounts.create']) || ([gcp.audit.method_name] =~ ['.*.serviceAccounts.update'])
+    || ([gcp.audit.method_name] =~ ['.*.serviceAccounts.enable']) || ([gcp.audit.method_name]
+    =~ ['.*.serviceAccounts.undelete']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: google_cloud_dns_zone_modified_or_deleted
+  description: Identifies when a DNS Zone is modified or deleted in Google Cloud.
+  condition: (([gcp.audit.method_name] =~ ['Dns.ManagedZones.Delete']) || ([gcp.audit.method_name]
+    =~ ['Dns.ManagedZones.Update']) || ([gcp.audit.method_name] =~ ['Dns.ManagedZones.Patch']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: google_cloud_vpn_tunnel_modified_or_deleted
+  description: Identifies when a VPN Tunnel Modified or Deleted in Google Cloud.
+  condition: (([gcp.audit.method_name] =~ ['compute.vpnTunnels.insert']) || ([gcp.audit.method_name]
+    =~ ['compute.vpnTunnels.delete']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: google_cloud_re_identifies_sensitive_information_
+  description: Identifies when sensitive information is re-identified in google Cloud.
+  condition: ([gcp.audit.method_name] == ['projects.content.reidentify'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact,t1565
+  exttype: SIEM
+- name: google_cloud_storage_buckets_enumeration
+  description: Detects when storage bucket is enumerated in Google Cloud.
+  condition: (([gcp.audit.method_name] =~ ['storage.buckets.list']) || ([gcp.audit.method_name]
+    =~ ['storage.buckets.listChannels']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery
+  exttype: SIEM

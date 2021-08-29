@@ -1,0 +1,33 @@
+name: google_workspace.admin
+applications: ""
+definitions:
+- name: google_workspace_granted_domain_api_access
+  description: Detects when an API access service account is granted domain authority.
+  condition: ([eventService] == ['admin.googleapis.com']) && ([eventName] == ['AUTHORIZE_API_CLIENT_ACCESS'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,t1098
+  exttype: SIEM
+- name: google_workspace_role_modified_or_deleted
+  description: Detects when an a role is modified or deleted in Google Workspace.
+  condition: ([eventService] == ['admin.googleapis.com']) && (([eventName] =~ ['DELETE.*ROLE'])
+    || ([eventName] =~ ['RENAME.*ROLE']) || ([eventName] =~ ['UPDATE.*ROLE']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: google_workspace_role_privilege_deleted
+  description: Detects when an a role privilege is deleted in Google Workspace.
+  condition: ([eventService] == ['admin.googleapis.com']) && ([eventName] == ['REMOVE_PRIVILEGE'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: google_workspace_user_granted_admin_privileges
+  description: Detects when an Google Workspace user is granted admin privileges.
+  condition: ([eventService] == ['admin.googleapis.com']) && (([eventName] =~ ['GRANT.*DELEGATED.*ADMIN.*PRIVILEGES'])
+    || ([eventName] =~ ['GRANT.*ADMIN.*PRIVILEGE']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,t1098
+  exttype: SIEM

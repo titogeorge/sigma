@@ -1,0 +1,100 @@
+name: antivirus
+applications: ""
+definitions:
+- name: antivirus_exploitation_framework_detection
+  description: Detects a highly relevant Antivirus alert that reports an exploitation
+    framework
+  condition: (([Signature] =~ ['.*MeteTool.*']) || ([Signature] =~ ['.*MPreter.*'])
+    || ([Signature] =~ ['.*Meterpreter.*']) || ([Signature] =~ ['.*Metasploit.*'])
+    || ([Signature] =~ ['.*PowerSploit.*']) || ([Signature] =~ ['.*CobaltSrike.*'])
+    || ([Signature] =~ ['.*Swrort.*']) || ([Signature] =~ ['.*Rozena.*']) || ([Signature]
+    =~ ['.*Backdoor.Cobalt.*']) || ([Signature] =~ ['.*CobaltStr.*']) || ([Signature]
+    =~ ['.*COBEACON.*']) || ([Signature] =~ ['.*Cometer.*']) || ([Signature] =~ ['.*Razy.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,execution,t1203,command_and_control,t1219
+  exttype: SIEM
+- name: antivirus_relevant_file_paths_alerts
+  description: Detects an Antivirus alert in a highly relevant file path or with a
+    relevant file name
+  condition: (([FileName] =~ ['C.*.*Windows.*.*.*']) || ([FileName] =~ ['C.*.*Temp.*.*.*'])
+    || ([FileName] =~ ['C.*.*PerfLogs.*.*.*']) || ([FileName] =~ ['C.*.*Users.*Public.*.*.*'])
+    || ([FileName] =~ ['C.*.*Users.*Default.*.*.*'])) || (([FileName] =~ ['.*.*Client.*.*.*'])
+    || ([FileName] =~ ['.*.*tsclient.*.*.*']) || ([FileName] =~ ['.*.*inetpub.*.*.*'])
+    || ([FileName] =~ ['.*.*www.*.*']) || ([FileName] =~ ['.*apache.*']) || ([FileName]
+    =~ ['.*tomcat.*']) || ([FileName] =~ ['.*nginx.*']) || ([FileName] =~ ['.*weblogic.*']))
+    || (([Filename] =~ ['.*.ps1']) || ([Filename] =~ ['.*.psm1']) || ([Filename] =~
+    ['.*.vbs']) || ([Filename] =~ ['.*.bat']) || ([Filename] =~ ['.*.cmd']) || ([Filename]
+    =~ ['.*.sh']) || ([Filename] =~ ['.*.chm']) || ([Filename] =~ ['.*.xml']) || ([Filename]
+    =~ ['.*.txt']) || ([Filename] =~ ['.*.jsp']) || ([Filename] =~ ['.*.jspx']) ||
+    ([Filename] =~ ['.*.asp']) || ([Filename] =~ ['.*.aspx']) || ([Filename] =~ ['.*.ashx'])
+    || ([Filename] =~ ['.*.asax']) || ([Filename] =~ ['.*.asmx']) || ([Filename] =~
+    ['.*.php']) || ([Filename] =~ ['.*.cfm']) || ([Filename] =~ ['.*.py']) || ([Filename]
+    =~ ['.*.pyc']) || ([Filename] =~ ['.*.pl']) || ([Filename] =~ ['.*.rb']) || ([Filename]
+    =~ ['.*.cgi']) || ([Filename] =~ ['.*.war']) || ([Filename] =~ ['.*.ear']) ||
+    ([Filename] =~ ['.*.hta']) || ([Filename] =~ ['.*.lnk']) || ([Filename] =~ ['.*.scf'])
+    || ([Filename] =~ ['.*.sct']) || ([Filename] =~ ['.*.vbe']) || ([Filename] =~
+    ['.*.wsf']) || ([Filename] =~ ['.*.wsh']) || ([Filename] =~ ['.*.gif']) || ([Filename]
+    =~ ['.*.png']) || ([Filename] =~ ['.*.jpg']) || ([Filename] =~ ['.*.jpeg']) ||
+    ([Filename] =~ ['.*.svg']) || ([Filename] =~ ['.*.dat']))
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: antivirus_hacktool_detection
+  description: Detects a highly relevant Antivirus alert that reports a hack tool
+    or other attack tool
+  condition: (([Signature] =~ ['HTOOL.*']) || ([Signature] =~ ['HKTL.*']) || ([Signature]
+    =~ ['SecurityTool.*']) || ([Signature] =~ ['ATK.*.*'])) || (([Signature] =~ ['.*Hacktool.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: antivirus_password_dumper_detection
+  description: Detects a highly relevant Antivirus alert that reports a password dumper
+  condition: (([Signature] =~ ['.*DumpCreds.*']) || ([Signature] =~ ['.*Mimikatz.*'])
+    || ([Signature] =~ ['.*PWCrack.*']) || ([Signature] =~ ['.*HTool.*WCE.*']) ||
+    ([Signature] =~ ['.*PSWtool.*']) || ([Signature] =~ ['.*PWDump.*']) || ([Signature]
+    =~ ['.*SecurityTool.*']) || ([Signature] =~ ['.*PShlSpy.*']) || ([Signature] =~
+    ['.*Rubeus.*']) || ([Signature] =~ ['.*Kekeo.*']) || ([Signature] =~ ['.*LsassDump.*'])
+    || ([Signature] =~ ['.*Outflank.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,t1558,001,002
+  exttype: SIEM
+- name: antivirus_printernightmare_cve_2021_34527_exploit_detection
+  description: Detects the suspicious file that is created from PoC code against Windows
+    Print Spooler Remote Code Execution Vulnerability CVE-2021-34527 (PrinterNightmare),
+    CVE-2021-1675 .
+  condition: ([FileName] =~ ['.*C.*.*Windows.*System32.*spool.*drivers.*x64.*.*.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1055
+  exttype: SIEM
+- name: antivirus_web_shell_detection
+  description: Detects a highly relevant Antivirus alert that reports a web shell.
+    It's highly recommended to tune this rule to the specific strings used by your
+    anti virus solution by downloading a big webshell repo from e.g. github and checking
+    the matches.
+  condition: (([Signature] =~ ['PHP.*.*']) || ([Signature] =~ ['JSP.*.*']) || ([Signature]
+    =~ ['ASP.*.*']) || ([Signature] =~ ['Perl.*.*']) || ([Signature] =~ ['PHP..*'])
+    || ([Signature] =~ ['JSP..*']) || ([Signature] =~ ['ASP..*']) || ([Signature]
+    =~ ['Perl..*']) || ([Signature] =~ ['VBS.*Uxor.*']) || ([Signature] =~ ['IIS.*BackDoor.*'])
+    || ([Signature] =~ ['JAVA.*Backdoor.*']) || ([Signature] =~ ['Troj.*ASP.*']) ||
+    ([Signature] =~ ['Troj.*PHP.*']) || ([Signature] =~ ['Troj.*JSP.*'])) || (([Signature]
+    =~ ['.*Webshell.*']) || ([Signature] =~ ['.*Chopper.*']) || ([Signature] =~ ['.*SinoChoper.*'])
+    || ([Signature] =~ ['.*ASPXSpy.*']) || ([Signature] =~ ['.*Aspdoor.*']) || ([Signature]
+    =~ ['.*filebrowser.*']) || ([Signature] =~ ['.*PHP.*.*']) || ([Signature] =~ ['.*JSP.*.*'])
+    || ([Signature] =~ ['.*ASP.*.*']) || ([Signature] =~ ['.*PHP.*.*']) || ([Signature]
+    =~ ['.*JSP.*.*']) || ([Signature] =~ ['.*ASP.*.*']) || ([Signature] =~ ['.*Perl.*.*'])
+    || ([Signature] =~ ['.*PHPShell.*']) || ([Signature] =~ ['.*Trojan.PHP.*']) ||
+    ([Signature] =~ ['.*Trojan.ASP.*']) || ([Signature] =~ ['.*Trojan.JSP.*']) ||
+    ([Signature] =~ ['.*Trojan.VBS.*']) || ([Signature] =~ ['.*PHP.*Agent.*']) ||
+    ([Signature] =~ ['.*ASP.*Agent.*']) || ([Signature] =~ ['.*JSP.*Agent.*']) ||
+    ([Signature] =~ ['.*VBS.*Agent.*']) || ([Signature] =~ ['.*Backdoor.*PHP.*'])
+    || ([Signature] =~ ['.*Backdoor.*JSP.*']) || ([Signature] =~ ['.*Backdoor.*ASP.*'])
+    || ([Signature] =~ ['.*Backdoor.*VBS.*']) || ([Signature] =~ ['.*Backdoor.*Java.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,t1100,t1505,003
+  exttype: SIEM

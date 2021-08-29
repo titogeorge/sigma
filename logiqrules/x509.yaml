@@ -1,0 +1,11 @@
+name: x509
+applications: ""
+definitions:
+- name: default_cobalt_strike_certificate
+  description: Detects the presence of default Cobalt Strike certificate in the HTTPS
+    traffic
+  condition: ([certificate.serial] == ['8BB00EE'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,s0154
+  exttype: SIEM

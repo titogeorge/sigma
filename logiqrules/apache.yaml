@@ -1,0 +1,26 @@
+name: apache
+applications: ""
+definitions:
+- name: apache_threading_error
+  description: Detects an issue in apache logs that reports threading related errors
+  condition: message =~ '.*.*pthread.*tpp.*change.*priority.*.*Assertion.*.*new.*prio.*==.*.*1.*.*.*.*.*new.*prio.*.*=.*fifo.*min.*prio.*.*.*.*new.*prio.*.*=.*fifo.*max.*prio.*'
+  level: medium
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: nginx_core_dump
+  description: Detects a core dump of a crashing Nginx worker process, which could
+    be a signal of a serious problem or exploitation attempts.
+  condition: message =~ 'exited.*on.*signal.*6.*.*core.*dumped.*'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,impact,t1499,004
+  exttype: SIEM
+- name: apache_segmentation_fault
+  description: Detects a segmentation fault error message caused by a creashing apache
+    worker process
+  condition: message =~ 'exit.*signal.*Segmentation.*Fault'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,impact,t1499,004
+  exttype: SIEM

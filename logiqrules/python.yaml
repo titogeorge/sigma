@@ -1,0 +1,11 @@
+name: python
+applications: ""
+definitions:
+- name: python_sql_exceptions
+  description: Generic rule for SQL exceptions in Python according to PEP 249
+  condition: message =~ 'DataError' || message =~ 'IntegrityError' || message =~ 'ProgrammingError'
+    || message =~ 'OperationalError'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

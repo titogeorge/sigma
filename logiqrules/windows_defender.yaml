@@ -1,0 +1,19 @@
+name: windows_defender
+applications: ""
+definitions:
+- name: psexec_and_wmi_process_creations_block
+  description: Detects blocking of process creations originating from PSExec and WMI
+    commands
+  condition: ([EventID] == 1121) && (([ProcessName] =~ ['.*.*wmiprvse.exe']) || ([ProcessName]
+    =~ ['.*.*psexesvc.exe']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,lateral_movement,t1047,t1035,t1569,002
+  exttype: SIEM
+- name: lsass_access_detected_via_attack_surface_reduction
+  description: Detects Access to LSASS Process
+  condition: ([EventID] == 1121) && ([Path] =~ ['.*.*lsass.exe'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,001
+  exttype: SIEM

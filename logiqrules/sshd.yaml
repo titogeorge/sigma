@@ -1,0 +1,23 @@
+name: sshd
+applications: ""
+definitions:
+- name: sshd_error_message_cve_2018_15473
+  description: Detects exploitation attempt using public exploit code for CVE-2018-15473
+  condition: message =~ 'error.*.*buffer.*get.*ret.*.*trying.*to.*get.*more.*bytes.*1907.*than.*in.*buffer.*308.*.*preauth.*'
+  level: medium
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: suspicious_openssh_daemon_error
+  description: Detects suspicious SSH / SSHD error messages that indicate a fatal
+    or suspicious error that could be caused by exploiting attempts
+  condition: message =~ '.*unexpected.*internal.*error.*' || message =~ '.*unknown.*or.*unsupported.*key.*type.*'
+    || message =~ '.*invalid.*certificate.*signing.*key.*' || message =~ '.*invalid.*elliptic.*curve.*value.*'
+    || message =~ '.*incorrect.*signature.*' || message =~ '.*error.*in.*libcrypto.*'
+    || message =~ '.*unexpected.*bytes.*remain.*after.*decoding.*' || message =~ '.*fatal.*.*buffer.*get.*string.*.*bad.*string.*'
+    || message =~ '.*Local.*.*crc32.*compensation.*attack.*' || message =~ '.*bad.*client.*public.*DH.*value.*'
+    || message =~ '.*Corrupted.*MAC.*on.*input.*'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

@@ -1,0 +1,22 @@
+name: dns-server
+applications: ""
+definitions:
+- name: dns_server_error_failed_loading_the_serverlevelplugindll
+  description: This rule detects a DNS server error in which a specified plugin DLL
+    (in registry) could not be loaded
+  condition: (([EventID] == 150) || ([EventID] == 770))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1073,t1574,002
+  exttype: SIEM
+- name: gallium_artefacts
+  description: Detects artefacts associated with activity group GALLIUM - Microsoft
+    Threat Intelligence Center indicators released in December 2019.
+  condition: ([EventID] == 257) && (([QNAME] =~ ['asyspy256.ddns.net']) || ([QNAME]
+    =~ ['hotkillmail9sddcc.ddns.net']) || ([QNAME] =~ ['rosaf112.ddns.net']) || ([QNAME]
+    =~ ['cvdfhjh1231.myftp.biz']) || ([QNAME] =~ ['sz2016rose.ddns.net']) || ([QNAME]
+    =~ ['dffwescwer4325.myftp.biz']) || ([QNAME] =~ ['cvdfhjh1231.ddns.net']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,command_and_control
+  exttype: SIEM

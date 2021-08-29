@@ -1,0 +1,712 @@
+name: powershell
+applications: ""
+definitions:
+- name: abusable_invoke_athremotefxvgpudisablementcommand
+  description: RemoteFXvGPUDisablement.exe is an abusable, signed PowerShell host
+    executable that was introduced in Windows 10 and Server 2019 (OS Build 17763.1339).
+  condition: ([ContextInfo] =~ ['.*Invoke.*ATHRemoteFXvGPUDisablementCommand.*.*'])
+    && (([ContextInfo] =~ ['.*.*ModuleName.*.*']) || ([ContextInfo] =~ ['.*.*ModulePath.*.*'])
+    || ([ContextInfo] =~ ['.*.*ScriptBlock.*.*']) || ([ContextInfo] =~ ['.*.*RemoteFXvGPUDisablementFilePath.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1218
+  exttype: SIEM
+- name: detected_windows_software_discovery
+  description: Adversaries may attempt to enumerate software for a variety of reasons,
+    such as figuring out what security measures are present or if the compromised
+    system has a version of software that is vulnerable.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*get.*itemProperty.*'])
+    && ([ScriptBlockText] =~ ['.*.*software.*.*.*']) && ([ScriptBlockText] =~ ['.*select.*object.*'])
+    && ([ScriptBlockText] =~ ['.*format.*table.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,discovery,t1518
+  exttype: SIEM
+- name: root_certificate_installed
+  description: Adversaries may install a root certificate on a compromised system
+    to avoid warnings when connecting to adversary controlled web servers.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Cert.*.*LocalMachine.*Root.*'])
+    && ([ScriptBlockText] =~ ['.*Move.*Item.*']) || ([ScriptBlockText] =~ ['.*Import.*Certificate.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1553,004
+  exttype: SIEM
+- name: zip_a_folder_with_powershell_for_staging_in_temp
+  description: Use living off the land tools to zip a file and stage it in the Windows
+    temporary folder for later exfiltration
+  condition: ([ContextInfo] =~ ['.*Compress.*Archive.*.*']) && ([ContextInfo] =~ ['.*.*.*Path.*.*'])
+    && ([ContextInfo] =~ ['.*.*.*DestinationPath.*.*']) && ([ContextInfo] =~ ['.*.*env.*TEMP.*.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1074,001
+  exttype: SIEM
+- name: powershell_icmp_exfiltration
+  description: Detects Exfiltration Over Alternative Protocol - ICMP. Adversaries
+    may steal data by exfiltrating it over an un-encrypted network protocol other
+    than that of the existing command and control channel.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*New.*Object.*']) &&
+    ([ScriptBlockText] =~ ['.*System.Net.NetworkInformation.Ping.*']) && ([ScriptBlockText]
+    =~ ['.*.Send.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1048,003
+  exttype: SIEM
+- name: powershell_keylogging
+  description: Adversaries may log user keystrokes to intercept credentials as the
+    user types them.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Get.*Keystrokes.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ProcAddress.*user32.dll.*GetAsyncKeyState.*'])
+    && ([ScriptBlockText] =~ ['.*Get.*ProcAddress.*user32.dll.*GetForegroundWindow.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1056,001
+  exttype: SIEM
+- name: powershell_get_clipboard
+  description: A General detection for the Get-Clipboard commands in PowerShell logs.
+    This could be an adversary capturing clipboard contents.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Get.*Clipboard.*'])
+    || ([EventID] == 4103) && ([Payload] =~ ['.*Get.*Clipboard.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1115
+  exttype: SIEM
+- name: execution_via_cl_mutexverifiers_ps1
+  description: Detects Execution via runAfterCancelProcess in CL_Mutexverifiers.ps1
+    module
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*CL.*Mutexverifiers.ps1.*'])
+    && ([ScriptBlockText] =~ ['.*runAfterCancelProcess.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1216
+  exttype: SIEM
+- name: execution_via_cl_invocation_ps1
+  description: Detects Execution via SyncInvoke in CL_Invocation.ps1 module
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*CL.*Invocation.ps1.*'])
+    && ([ScriptBlockText] =~ ['.*SyncInvoke.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1216
+  exttype: SIEM
+- name: powershell_psattack
+  description: Detects the use of PSAttack PowerShell hack tool
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*PS.*ATTACK.*.*.*.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_local_email_collection
+  description: Adversaries may target user email on local systems to collect sensitive
+    information. Files containing email data can be acquired from a user’s local system,
+    such as Outlook storage or cache files.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Get.*Inbox.ps1.*'])
+    || ([ScriptBlockText] =~ ['.*Microsoft.Office.Interop.Outlook.*']) || ([ScriptBlockText]
+    =~ ['.*Microsoft.Office.Interop.Outlook.olDefaultFolders.*']) || ([ScriptBlockText]
+    =~ ['.*.*comobject.*outlook.application.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1114,001
+  exttype: SIEM
+- name: wmimplant_hack_tool
+  description: Detects parameters used by WMImplant
+  condition: (([ScriptBlockText] =~ ['.*WMImplant.*']) || ([ScriptBlockText] =~ ['.*.*change.*user.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*gen.*cli.*.*']) || ([ScriptBlockText] =~ ['.*.*command.*exec.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*disable.*wdigest.*.*']) || ([ScriptBlockText] =~
+    ['.*.*disable.*winrm.*.*']) || ([ScriptBlockText] =~ ['.*.*enable.*wdigest.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*enable.*winrm.*.*']) || ([ScriptBlockText] =~ ['.*.*registry.*mod.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*remote.*posh.*.*']) || ([ScriptBlockText] =~ ['.*.*sched.*job.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*service.*mod.*.*']) || ([ScriptBlockText] =~ ['.*.*process.*kill.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*active.*users.*.*']) || ([ScriptBlockText] =~ ['.*.*basic.*info.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*power.*off.*.*']) || ([ScriptBlockText] =~ ['.*.*vacant.*system.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*logon.*events.*.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1047,t1059,001,t1086
+  exttype: SIEM
+- name: netcat_the_powershell_version
+  description: Adversaries may use a non-application layer protocol for communication
+    between host and C2 server or among infected hosts within a network
+  condition: ([EventID] == 4103) && (([ContextInfo] =~ ['.*powercat.*.*']) || ([ContextInfo]
+    =~ ['.*powercat.ps1.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1095
+  exttype: SIEM
+- name: bad_opsec_powershell_code_artifacts
+  description: Focuses on trivial artifacts observed in variants of prevalent offensive
+    ps1 payloads, including Cobalt Strike Beacon, PoshC2, Powerview, Letmein, Empire,
+    Powersploit, and other attack payloads that often undergo minimal changes by attackers
+    due to bad opsec.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*.*DoIt.*']) || ([ScriptBlockText]
+    =~ ['.*harmj0y.*']) || ([ScriptBlockText] =~ ['.*mattifestation.*']) || ([ScriptBlockText]
+    =~ ['.*.*RastaMouse.*']) || ([ScriptBlockText] =~ ['.*tifkin.*.*']) || ([ScriptBlockText]
+    =~ ['.*0xdeadbeef.*'])) || ([EventID] == 4103) && (([Payload] =~ ['.*.*DoIt.*'])
+    || ([Payload] =~ ['.*harmj0y.*']) || ([Payload] =~ ['.*mattifestation.*']) ||
+    ([Payload] =~ ['.*.*RastaMouse.*']) || ([Payload] =~ ['.*tifkin.*.*']) || ([Payload]
+    =~ ['.*0xdeadbeef.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_adrecon_execution
+  description: Detects execution of ADRecon.ps1 for AD reconnaissance which has been
+    reported to be actively used by FIN7
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Function.*Get.*ADRExcelComOb.*'])
+    || ([ScriptBlockText] =~ ['.*ADRecon.*Report.xlsx.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,discovery,execution,t1059,001
+  exttype: SIEM
+- name: powershell_timestomp
+  description: Adversaries may modify file time attributes to hide new or changes
+    to existing files. Timestomping is a technique that modifies the timestamps of
+    a file (the modify, access, create, and change times), often to mimic files that
+    are in the same folder.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*.CreationTime.*=.*'])
+    || ([ScriptBlockText] =~ ['.*.LastWriteTime.*=.*']) || ([ScriptBlockText] =~ ['.*.LastAccessTime.*=.*'])
+    || ([ScriptBlockText] =~ ['.*.*IO.File.*.*.*SetCreationTime.*']) || ([ScriptBlockText]
+    =~ ['.*.*IO.File.*.*.*SetLastAccessTime.*']) || ([ScriptBlockText] =~ ['.*.*IO.File.*.*.*SetLastWriteTime.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,006
+  exttype: SIEM
+- name: suspicious_powershell_invocations___specific
+  description: Detects suspicious PowerShell invocation command parameters
+  condition: message =~ '.*.*w.*' && message =~ 'hidden' && message =~ '.*nop' &&
+    message =~ '.*.*c.*' && message =~ '.*Convert.*.*.*FromBase64String' || message
+    =~ '.*noni' && message =~ 'iex' && message =~ 'New.*Object' || message =~ '.*ep'
+    && message =~ 'bypass' && message =~ '.*Enc' || message =~ 'powershell' && message
+    =~ 'reg' && message =~ 'add' && message =~ 'HKCU.*software.*microsoft.*windows.*currentversion.*run'
+    || message =~ 'bypass' && message =~ '.*noprofile' && message =~ '.*windowstyle'
+    && message =~ 'hidden' && message =~ 'new.*object' && message =~ 'system.net.webclient'
+    && message =~ '.download' || message =~ 'iex' && message =~ 'New.*Object' && message
+    =~ 'Net.WebClient' && message =~ '.Download'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: malicious_powerview_powershell_commandlets
+  description: Detects Commandlet names from PowerView of PowerSploit exploitation
+    framework.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Export.*PowerViewCSV.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*IPAddress.*']) || ([ScriptBlockText] =~ ['.*Resolve.*IPAddress.*'])
+    || ([ScriptBlockText] =~ ['.*Convert.*NameToSid.*']) || ([ScriptBlockText] =~
+    ['.*ConvertTo.*SID.*']) || ([ScriptBlockText] =~ ['.*Convert.*ADName.*']) || ([ScriptBlockText]
+    =~ ['.*ConvertFrom.*UACValue.*']) || ([ScriptBlockText] =~ ['.*Add.*RemoteConnection.*'])
+    || ([ScriptBlockText] =~ ['.*Remove.*RemoteConnection.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*UserImpersonation.*']) || ([ScriptBlockText] =~ ['.*Invoke.*RevertToSelf.*'])
+    || ([ScriptBlockText] =~ ['.*Request.*SPNTicket.*']) || ([ScriptBlockText] =~
+    ['.*Get.*DomainSPNTicket.*']) || ([ScriptBlockText] =~ ['.*Invoke.*Kerberoast.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*PathAcl.*']) || ([ScriptBlockText] =~ ['.*Get.*DNSZone.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainDNSZone.*']) || ([ScriptBlockText] =~
+    ['.*Get.*DNSRecord.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainDNSRecord.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetDomain.*']) || ([ScriptBlockText] =~ ['.*Get.*Domain.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetDomainController.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*DomainController.*']) || ([ScriptBlockText] =~ ['.*Get.*NetForest.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*Forest.*']) || ([ScriptBlockText] =~ ['.*Get.*NetForestDomain.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ForestDomain.*']) || ([ScriptBlockText] =~ ['.*Get.*NetForestCatalog.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ForestGlobalCatalog.*']) || ([ScriptBlockText]
+    =~ ['.*Find.*DomainObjectPropertyOutlier.*']) || ([ScriptBlockText] =~ ['.*Get.*NetUser.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainUser.*']) || ([ScriptBlockText] =~ ['.*New.*DomainUser.*'])
+    || ([ScriptBlockText] =~ ['.*Set.*DomainUserPassword.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*UserEvent.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainUserEvent.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetComputer.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainComputer.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ADObject.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainObject.*'])
+    || ([ScriptBlockText] =~ ['.*Set.*ADObject.*']) || ([ScriptBlockText] =~ ['.*Set.*DomainObject.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ObjectAcl.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainObjectAcl.*'])
+    || ([ScriptBlockText] =~ ['.*Add.*ObjectAcl.*']) || ([ScriptBlockText] =~ ['.*Add.*DomainObjectAcl.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*ACLScanner.*']) || ([ScriptBlockText] =~
+    ['.*Find.*InterestingDomainAcl.*']) || ([ScriptBlockText] =~ ['.*Get.*NetOU.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainOU.*']) || ([ScriptBlockText] =~ ['.*Get.*NetSite.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainSite.*']) || ([ScriptBlockText] =~ ['.*Get.*NetSubnet.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainSubnet.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainSID.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetGroup.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainGroup.*'])
+    || ([ScriptBlockText] =~ ['.*New.*DomainGroup.*']) || ([ScriptBlockText] =~ ['.*Find.*ManagedSecurityGroups.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainManagedSecurityGroup.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*NetGroupMember.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainGroupMember.*'])
+    || ([ScriptBlockText] =~ ['.*Add.*DomainGroupMember.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*NetFileServer.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainFileServer.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DFSshare.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainDFSShare.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetGPO.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainGPO.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetGPOGroup.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainGPOLocalGroup.*'])
+    || ([ScriptBlockText] =~ ['.*Find.*GPOLocation.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainGPOUserLocalGroupMapping.*'])
+    || ([ScriptBlockText] =~ ['.*Find.*GPOComputerAdmin.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*DomainGPOComputerLocalGroupMapping.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainPolicy.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetLocalGroup.*']) || ([ScriptBlockText] =~
+    ['.*Get.*NetLocalGroupMember.*']) || ([ScriptBlockText] =~ ['.*Get.*NetShare.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetLoggedon.*']) || ([ScriptBlockText] =~ ['.*Get.*NetSession.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*LoggedOnLocal.*']) || ([ScriptBlockText] =~
+    ['.*Get.*RegLoggedOn.*']) || ([ScriptBlockText] =~ ['.*Get.*NetRDPSession.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*CheckLocalAdminAccess.*']) || ([ScriptBlockText]
+    =~ ['.*Test.*AdminAccess.*']) || ([ScriptBlockText] =~ ['.*Get.*SiteName.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*NetComputerSiteName.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*Proxy.*']) || ([ScriptBlockText] =~ ['.*Get.*WMIRegProxy.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*LastLoggedOn.*']) || ([ScriptBlockText] =~ ['.*Get.*WMIRegLastLoggedOn.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*CachedRDPConnection.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*WMIRegCachedRDPConnection.*']) || ([ScriptBlockText] =~ ['.*Get.*RegistryMountedDrive.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*WMIRegMountedDrive.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*NetProcess.*']) || ([ScriptBlockText] =~ ['.*Get.*WMIProcess.*'])
+    || ([ScriptBlockText] =~ ['.*Find.*InterestingFile.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*UserHunter.*']) || ([ScriptBlockText] =~ ['.*Find.*DomainUserLocation.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*ProcessHunter.*']) || ([ScriptBlockText]
+    =~ ['.*Find.*DomainProcess.*']) || ([ScriptBlockText] =~ ['.*Invoke.*EventHunter.*'])
+    || ([ScriptBlockText] =~ ['.*Find.*DomainUserEvent.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*ShareFinder.*']) || ([ScriptBlockText] =~ ['.*Find.*DomainShare.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*FileFinder.*']) || ([ScriptBlockText] =~
+    ['.*Find.*InterestingDomainShareFile.*']) || ([ScriptBlockText] =~ ['.*Find.*LocalAdminAccess.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*EnumerateLocalAdmin.*']) || ([ScriptBlockText]
+    =~ ['.*Find.*DomainLocalGroupMember.*']) || ([ScriptBlockText] =~ ['.*Get.*NetDomainTrust.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainTrust.*']) || ([ScriptBlockText] =~ ['.*Get.*NetForestTrust.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ForestTrust.*']) || ([ScriptBlockText] =~ ['.*Find.*ForeignUser.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*DomainForeignUser.*']) || ([ScriptBlockText]
+    =~ ['.*Find.*ForeignGroup.*']) || ([ScriptBlockText] =~ ['.*Get.*DomainForeignGroupMember.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*MapDomainTrust.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*DomainTrustMapping.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001
+  exttype: SIEM
+- name: malicious_shellintel_powershell_commandlets
+  description: Detects Commandlet names from ShellIntel exploitation scripts.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Invoke.*SMBAutoBrute.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*GPOLinks.*']) || ([ScriptBlockText] =~ ['.*Out.*Minidump.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Potato.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001
+  exttype: SIEM
+- name: winlogon_helper_dll
+  description: Winlogon.exe is a Windows component responsible for actions at logon/logoff
+    as well as the secure attention sequence (SAS) triggered by Ctrl-Alt-Delete. Registry
+    entries in HKLM\Software[Wow6432Node]Microsoft\Windows NT\CurrentVersion\Winlogon\
+    and HKCU\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\ are used to manage
+    additional helper programs and functionalities that support Winlogon. Malicious
+    modifications to these Registry keys may cause Winlogon to load and execute malicious
+    DLLs and/or executables.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*CurrentVersion.*Winlogon.*'])
+    && (([ScriptBlockText] =~ ['.*Set.*ItemProperty.*']) || ([ScriptBlockText] =~
+    ['.*New.*Item.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,t1547,004,t1004
+  exttype: SIEM
+- name: suspicious_powershell_invocations___generic
+  description: Detects suspicious PowerShell invocation command parameters
+  condition: message =~ '.*.*enc.*' || message =~ '.*.*EncodedCommand.*' && message
+    =~ '.*.*w.*hidden.*' || message =~ '.*.*window.*hidden.*' || message =~ '.*.*windowstyle.*hidden.*'
+    && message =~ '.*.*noni.*' || message =~ '.*.*noninteractive.*'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: suspicious_powershell_keywords
+  description: Detects keywords that could indicate the use of some PowerShell exploitation
+    framework
+  condition: message =~ 'System.Reflection.Assembly.Load.*.*' || message =~ '.*System.Reflection.Assembly.*.*.*Load.*.*'
+    || message =~ '.*Reflection.Assembly.*.*.*Load.*.*' || message =~ 'System.Reflection.AssemblyName'
+    || message =~ 'Reflection.Emit.AssemblyBuilderAccess' || message =~ 'Runtime.InteropServices.DllImportAttribute'
+    || message =~ 'SuspendThread' || message =~ 'rundll32' || message =~ 'Invoke.*WMIMethod'
+    || message =~ 'http.*.*.*127.0.0.1'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_create_local_user
+  description: Detects creation of a local user via PowerShell
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*New.*LocalUser.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086,persistence,t1136
+  exttype: SIEM
+- name: powershell_trigger_profiles_by_add_content
+  description: Adversaries may gain persistence and elevate privileges by executing
+    malicious content triggered by PowerShell profiles.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Add.*Content.*']) &&
+    ([ScriptBlockText] =~ ['.*.*profile.*']) && ([ScriptBlockText] =~ ['.*.*Value.*'])
+    && (([ScriptBlockText] =~ ['.*Start.*Process.*']) || ([ScriptBlockText] =~ ['.*.*.*.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1546,013
+  exttype: SIEM
+- name: powershell_get_process_lsass_in_scriptblock
+  description: Detects a Get-Process command on lsass process, which is in almost
+    all cases a sign of malicious activity
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Get.*Process.*lsass.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,001
+  exttype: SIEM
+- name: malicious_nishang_powershell_commandlets
+  description: Detects Commandlet names and arguments from the Nishang exploitation
+    framework
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Add.*ConstrainedDelegationBackdoor.*'])
+    || ([ScriptBlockText] =~ ['.*Set.*DCShadowPermissions.*']) || ([ScriptBlockText]
+    =~ ['.*DNS.*TXT.*Pwnage.*']) || ([ScriptBlockText] =~ ['.*Execute.*OnTime.*'])
+    || ([ScriptBlockText] =~ ['.*HTTP.*Backdoor.*']) || ([ScriptBlockText] =~ ['.*Set.*RemotePSRemoting.*'])
+    || ([ScriptBlockText] =~ ['.*Set.*RemoteWMI.*']) || ([ScriptBlockText] =~ ['.*Invoke.*AmsiBypass.*'])
+    || ([ScriptBlockText] =~ ['.*Out.*CHM.*']) || ([ScriptBlockText] =~ ['.*Out.*HTA.*'])
+    || ([ScriptBlockText] =~ ['.*Out.*SCF.*']) || ([ScriptBlockText] =~ ['.*Out.*SCT.*'])
+    || ([ScriptBlockText] =~ ['.*Out.*Shortcut.*']) || ([ScriptBlockText] =~ ['.*Out.*WebQuery.*'])
+    || ([ScriptBlockText] =~ ['.*Out.*Word.*']) || ([ScriptBlockText] =~ ['.*Enable.*Duplication.*'])
+    || ([ScriptBlockText] =~ ['.*Remove.*Update.*']) || ([ScriptBlockText] =~ ['.*Download.*Execute.*PS.*'])
+    || ([ScriptBlockText] =~ ['.*Download.*Execute.*']) || ([ScriptBlockText] =~ ['.*Execute.*Command.*MSSQL.*'])
+    || ([ScriptBlockText] =~ ['.*Execute.*DNSTXT.*Code.*']) || ([ScriptBlockText]
+    =~ ['.*Out.*RundllCommand.*']) || ([ScriptBlockText] =~ ['.*Copy.*VSS.*']) ||
+    ([ScriptBlockText] =~ ['.*FireBuster.*']) || ([ScriptBlockText] =~ ['.*FireListener.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*Information.*']) || ([ScriptBlockText] =~ ['.*Get.*PassHints.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*WLAN.*Keys.*']) || ([ScriptBlockText] =~ ['.*Get.*Web.*Credentials.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*CredentialsPhish.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*MimikatzWDigestDowngrade.*']) || ([ScriptBlockText] =~ ['.*Invoke.*SSIDExfil.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*SessionGopher.*']) || ([ScriptBlockText]
+    =~ ['.*Keylogger.*']) || ([ScriptBlockText] =~ ['.*Invoke.*Interceptor.*']) ||
+    ([ScriptBlockText] =~ ['.*Create.*MultipleSessions.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*NetworkRelay.*']) || ([ScriptBlockText] =~ ['.*Run.*EXEonRemote.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Prasadhak.*']) || ([ScriptBlockText] =~ ['.*Invoke.*BruteForce.*'])
+    || ([ScriptBlockText] =~ ['.*Password.*List.*']) || ([ScriptBlockText] =~ ['.*Invoke.*JSRatRegsvr.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*JSRatRundll.*']) || ([ScriptBlockText] =~
+    ['.*Invoke.*PoshRatHttps.*']) || ([ScriptBlockText] =~ ['.*Invoke.*PowerShellIcmp.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*PowerShellUdp.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*PSGcat.*']) || ([ScriptBlockText] =~ ['.*Invoke.*PsGcatAgent.*'])
+    || ([ScriptBlockText] =~ ['.*Remove.*PoshRat.*']) || ([ScriptBlockText] =~ ['.*Add.*Persistance.*'])
+    || ([ScriptBlockText] =~ ['.*ExetoText.*']) || ([ScriptBlockText] =~ ['.*Invoke.*Decode.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Encode.*']) || ([ScriptBlockText] =~ ['.*Parse.*Keys.*'])
+    || ([ScriptBlockText] =~ ['.*Remove.*Persistence.*']) || ([ScriptBlockText] =~
+    ['.*StringtoBase64.*']) || ([ScriptBlockText] =~ ['.*TexttoExe.*']) || ([ScriptBlockText]
+    =~ ['.*Powerpreter.*']) || ([ScriptBlockText] =~ ['.*Nishang.*']) || ([ScriptBlockText]
+    =~ ['.*DataToEncode.*']) || ([ScriptBlockText] =~ ['.*LoggedKeys.*']) || ([ScriptBlockText]
+    =~ ['.*OUT.*DNSTXT.*']) || ([ScriptBlockText] =~ ['.*ExfilOption.*']) || ([ScriptBlockText]
+    =~ ['.*DumpCerts.*']) || ([ScriptBlockText] =~ ['.*DumpCreds.*']) || ([ScriptBlockText]
+    =~ ['.*Shellcode32.*']) || ([ScriptBlockText] =~ ['.*Shellcode64.*']) || ([ScriptBlockText]
+    =~ ['.*NotAllNameSpaces.*']) || ([ScriptBlockText] =~ ['.*exfill.*']) || ([ScriptBlockText]
+    =~ ['.*FakeDC.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: automated_collection_command_powershell
+  description: Once established within a system or network, an adversary may use automated
+    techniques for collecting internal data.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*.doc.*']) || ([ScriptBlockText]
+    =~ ['.*.docx.*']) || ([ScriptBlockText] =~ ['.*.xls.*']) || ([ScriptBlockText]
+    =~ ['.*.xlsx.*']) || ([ScriptBlockText] =~ ['.*.ppt.*']) || ([ScriptBlockText]
+    =~ ['.*.pptx.*']) || ([ScriptBlockText] =~ ['.*.rtf.*']) || ([ScriptBlockText]
+    =~ ['.*.pdf.*']) || ([ScriptBlockText] =~ ['.*.txt.*'])) && ([ScriptBlockText]
+    =~ ['.*Get.*ChildItem.*']) && ([ScriptBlockText] =~ ['.*.*.*Recurse.*.*']) &&
+    ([ScriptBlockText] =~ ['.*.*.*Include.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1119
+  exttype: SIEM
+- name: dnscat_execution
+  description: Dnscat exfiltration tool execution
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Start.*Dnscat2.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1048,execution,t1059,001,t1086
+  exttype: SIEM
+- name: alternate_powershell_hosts
+  description: Detects alternate PowerShell hosts potentially bypassing detections
+    looking for powershell.exe
+  condition: ([EventID] == 4103) && ([ContextInfo] =~ ['.*']) && ([ContextInfo] !~
+    ['.*powershell.exe.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_credential_prompt
+  description: Detects PowerShell calling a credential prompt
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*PromptForCredential.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,execution,t1059,001,t1086
+  exttype: SIEM
+- name: data_compressed___powershell
+  description: An adversary may compress data (e.g., sensitive documents) that is
+    collected prior to exfiltration in order to make it portable and minimize the
+    amount of data sent over the network.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*.*Recurse.*']) && ([ScriptBlockText]
+    =~ ['.*.*.*']) && ([ScriptBlockText] =~ ['.*Compress.*Archive.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1560,t1002
+  exttype: SIEM
+- name: clear_powershell_history
+  description: Detects keywords that could indicate clearing PowerShell history
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*del.*']) || ([ScriptBlockText]
+    =~ ['.*Remove.*Item.*']) || ([ScriptBlockText] =~ ['.*rm.*'])) && ([ScriptBlockText]
+    =~ ['.*.*Get.*PSReadlineOption.*.HistorySavePath.*']) || ([ScriptBlockText] =~
+    ['.*Set.*PSReadlineOption.*']) && ([ScriptBlockText] =~ ['.*.*HistorySaveStyle.*'])
+    && ([ScriptBlockText] =~ ['.*SaveNothing.*']) || ([EventID] == 4103) && (([Payload]
+    =~ ['.*del.*']) || ([Payload] =~ ['.*Remove.*Item.*']) || ([Payload] =~ ['.*rm.*']))
+    && ([Payload] =~ ['.*.*Get.*PSReadlineOption.*.HistorySavePath.*']) || ([Payload]
+    =~ ['.*Set.*PSReadlineOption.*']) && ([Payload] =~ ['.*.*HistorySaveStyle.*'])
+    && ([Payload] =~ ['.*SaveNothing.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,003,t1146
+  exttype: SIEM
+- name: suspicious_export_pfxcertificate
+  description: Detects Commandlet that is used to export certificates from the local
+    certificate store and sometimes used by threat actors to steal private keys from
+    compromised machines
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Export.*PfxCertificate.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1552,004
+  exttype: SIEM
+- name: powershell_decompress_commands
+  description: A General detection for specific decompress commands in PowerShell
+    logs. This could be an adversary decompressing files.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Expand.*Archive.*'])
+    || ([EventID] == 4103) && ([Payload] =~ ['.*Expand.*Archive.*'])
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1140
+  exttype: SIEM
+- name: powershell_suspicious_win32_pnpentity
+  description: Adversaries may attempt to gather information about attached peripheral
+    devices and components connected to a computer system.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Win32.*PnPEntity.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1120
+  exttype: SIEM
+- name: suspicious_non_powershell_wsman_com_provider
+  description: Detects suspicious use of the WSMAN provider without PowerShell.exe
+    as the host application.
+  condition: message =~ 'ProviderName=WSMan' && message !~ 'HostApplication=.*powershell'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,lateral_movement,t1021,003
+  exttype: SIEM
+- name: suspicious_powershell_download
+  description: Detects suspicious PowerShell download command
+  condition: message =~ 'System.Net.WebClient' && message =~ '.DownloadFile.*' ||
+    message =~ '.DownloadString.*'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: ntfs_alternate_data_stream
+  description: Detects writing data into NTFS alternate data streams from powershell.
+    Needs Script Block Logging.
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*set.*content.*']) ||
+    ([ScriptBlockText] =~ ['.*add.*content.*'])) && (([ScriptBlockText] =~ ['.*.*stream.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1564,004,t1096,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_deleted_mounted_share
+  description: Detects when when a mounted share is removed. Adversaries may remove
+    share connections that are no longer useful in order to clean up traces of their
+    operation
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Remove.*SmbShare.*'])
+    || ([ScriptBlockText] =~ ['.*Remove.*FileShare.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,005
+  exttype: SIEM
+- name: malicious_powershell_commandlets
+  description: Detects Commandlet names from well-known PowerShell exploitation frameworks
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Invoke.*DllInjection.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Shellcode.*']) || ([ScriptBlockText] =~ ['.*Invoke.*WmiCommand.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*GPPPassword.*']) || ([ScriptBlockText] =~ ['.*Get.*Keystrokes.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*TimedScreenshot.*']) || ([ScriptBlockText] =~
+    ['.*Get.*VaultCredential.*']) || ([ScriptBlockText] =~ ['.*Invoke.*CredentialInjection.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Mimikatz.*']) || ([ScriptBlockText] =~ ['.*Invoke.*NinjaCopy.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*TokenManipulation.*']) || ([ScriptBlockText]
+    =~ ['.*Out.*Minidump.*']) || ([ScriptBlockText] =~ ['.*VolumeShadowCopyTools.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*ReflectivePEInjection.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*UserHunter.*']) || ([ScriptBlockText] =~ ['.*Find.*GPOLocation.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*ACLScanner.*']) || ([ScriptBlockText] =~
+    ['.*Invoke.*DowngradeAccount.*']) || ([ScriptBlockText] =~ ['.*Get.*ServiceUnquoted.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ServiceFilePermission.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*ServicePermission.*']) || ([ScriptBlockText] =~ ['.*Invoke.*ServiceAbuse.*'])
+    || ([ScriptBlockText] =~ ['.*Install.*ServiceBinary.*']) || ([ScriptBlockText]
+    =~ ['.*Get.*RegAutoLogon.*']) || ([ScriptBlockText] =~ ['.*Get.*VulnAutoRun.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*VulnSchTask.*']) || ([ScriptBlockText] =~ ['.*Get.*UnattendedInstallFile.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ApplicationHost.*']) || ([ScriptBlockText] =~
+    ['.*Get.*RegAlwaysInstallElevated.*']) || ([ScriptBlockText] =~ ['.*Get.*Unconstrained.*'])
+    || ([ScriptBlockText] =~ ['.*Add.*RegBackdoor.*']) || ([ScriptBlockText] =~ ['.*Add.*ScrnSaveBackdoor.*'])
+    || ([ScriptBlockText] =~ ['.*Gupt.*Backdoor.*']) || ([ScriptBlockText] =~ ['.*Invoke.*ADSBackdoor.*'])
+    || ([ScriptBlockText] =~ ['.*Enabled.*DuplicateToken.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*PsUaCme.*']) || ([ScriptBlockText] =~ ['.*Remove.*Update.*']) ||
+    ([ScriptBlockText] =~ ['.*Check.*VM.*']) || ([ScriptBlockText] =~ ['.*Get.*LSASecret.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*PassHashes.*']) || ([ScriptBlockText] =~ ['.*Show.*TargetScreen.*'])
+    || ([ScriptBlockText] =~ ['.*Port.*Scan.*']) || ([ScriptBlockText] =~ ['.*Invoke.*PoshRatHttp.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*PowerShellTCP.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*PowerShellWMI.*']) || ([ScriptBlockText] =~ ['.*Add.*Exfiltration.*'])
+    || ([ScriptBlockText] =~ ['.*Add.*Persistence.*']) || ([ScriptBlockText] =~ ['.*Do.*Exfiltration.*'])
+    || ([ScriptBlockText] =~ ['.*Start.*CaptureServer.*']) || ([ScriptBlockText] =~
+    ['.*Get.*ChromeDump.*']) || ([ScriptBlockText] =~ ['.*Get.*ClipboardContents.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*FoxDump.*']) || ([ScriptBlockText] =~ ['.*Get.*IndexedItem.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*Screenshot.*']) || ([ScriptBlockText] =~ ['.*Invoke.*Inveigh.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*NetRipper.*']) || ([ScriptBlockText] =~ ['.*Invoke.*EgressCheck.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*PostExfil.*']) || ([ScriptBlockText] =~ ['.*Invoke.*PSInject.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*RunAs.*']) || ([ScriptBlockText] =~ ['.*MailRaider.*'])
+    || ([ScriptBlockText] =~ ['.*New.*HoneyHash.*']) || ([ScriptBlockText] =~ ['.*Set.*MacAttribute.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*DCSync.*']) || ([ScriptBlockText] =~ ['.*Invoke.*PowerDump.*'])
+    || ([ScriptBlockText] =~ ['.*Exploit.*Jboss.*']) || ([ScriptBlockText] =~ ['.*Invoke.*ThunderStruck.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*VoiceTroll.*']) || ([ScriptBlockText] =~
+    ['.*Set.*Wallpaper.*']) || ([ScriptBlockText] =~ ['.*Invoke.*InveighRelay.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*PsExec.*']) || ([ScriptBlockText] =~ ['.*Invoke.*SSHCommand.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*SecurityPackages.*']) || ([ScriptBlockText]
+    =~ ['.*Install.*SSP.*']) || ([ScriptBlockText] =~ ['.*Invoke.*BackdoorLNK.*'])
+    || ([ScriptBlockText] =~ ['.*PowerBreach.*']) || ([ScriptBlockText] =~ ['.*Get.*SiteListPassword.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*System.*']) || ([ScriptBlockText] =~ ['.*Invoke.*BypassUAC.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Tater.*']) || ([ScriptBlockText] =~ ['.*Invoke.*WScriptBypassUAC.*'])
+    || ([ScriptBlockText] =~ ['.*PowerUp.*']) || ([ScriptBlockText] =~ ['.*PowerView.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*RickAstley.*']) || ([ScriptBlockText] =~ ['.*Find.*Fruit.*'])
+    || ([ScriptBlockText] =~ ['.*HTTP.*Login.*']) || ([ScriptBlockText] =~ ['.*Find.*TrustedDocuments.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*Paranoia.*']) || ([ScriptBlockText] =~ ['.*Invoke.*WinEnum.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*ARPScan.*']) || ([ScriptBlockText] =~ ['.*Invoke.*PortScan.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*ReverseDNSLookup.*']) || ([ScriptBlockText]
+    =~ ['.*Invoke.*SMBScanner.*']) || ([ScriptBlockText] =~ ['.*Invoke.*Mimikittenz.*'])
+    || ([ScriptBlockText] =~ ['.*Invoke.*AllChecks.*'])) && ([ScriptBlockText] !~
+    ['.*Get.*SystemDriveInfo.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: remote_powershell_session
+  description: Detects remote PowerShell sessions
+  condition: ([EventID] == 4103) && ([HostName] == ['ServerRemoteHost']) && ([HostApplication]
+    =~ ['.*wsmprovhost.exe.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086,lateral_movement,t1021,006,t1028
+  exttype: SIEM
+- name: powershell_shellcode
+  description: Detects Base64 encoded Shellcode
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*AAAAYInlM.*']) && (([ScriptBlockText]
+    =~ ['.*OiCAAAAYInlM.*']) || ([ScriptBlockText] =~ ['.*OiJAAAAYInlM.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,privilege_escalation,t1055,execution,t1059,001,t1086
+  exttype: SIEM
+- name: malicious_powershell_keywords
+  description: Detects keywords from well-known PowerShell exploitation frameworks
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*AdjustTokenPrivileges.*'])
+    || ([ScriptBlockText] =~ ['.*IMAGE.*NT.*OPTIONAL.*HDR64.*MAGIC.*']) || ([ScriptBlockText]
+    =~ ['.*Microsoft.Win32.UnsafeNativeMethods.*']) || ([ScriptBlockText] =~ ['.*ReadProcessMemory.Invoke.*'])
+    || ([ScriptBlockText] =~ ['.*SE.*PRIVILEGE.*ENABLED.*']) || ([ScriptBlockText]
+    =~ ['.*LSA.*UNICODE.*STRING.*']) || ([ScriptBlockText] =~ ['.*MiniDumpWriteDump.*'])
+    || ([ScriptBlockText] =~ ['.*PAGE.*EXECUTE.*READ.*']) || ([ScriptBlockText] =~
+    ['.*SECURITY.*DELEGATION.*']) || ([ScriptBlockText] =~ ['.*TOKEN.*ADJUST.*PRIVILEGES.*'])
+    || ([ScriptBlockText] =~ ['.*TOKEN.*ALL.*ACCESS.*']) || ([ScriptBlockText] =~
+    ['.*TOKEN.*ASSIGN.*PRIMARY.*']) || ([ScriptBlockText] =~ ['.*TOKEN.*DUPLICATE.*'])
+    || ([ScriptBlockText] =~ ['.*TOKEN.*ELEVATION.*']) || ([ScriptBlockText] =~ ['.*TOKEN.*IMPERSONATE.*'])
+    || ([ScriptBlockText] =~ ['.*TOKEN.*INFORMATION.*CLASS.*']) || ([ScriptBlockText]
+    =~ ['.*TOKEN.*PRIVILEGES.*']) || ([ScriptBlockText] =~ ['.*TOKEN.*QUERY.*']) ||
+    ([ScriptBlockText] =~ ['.*Metasploit.*']) || ([ScriptBlockText] =~ ['.*Mimikatz.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_wmi_persistence
+  description: Adversaries may establish persistence and elevate privileges by executing
+    malicious content triggered by a Windows Management Instrumentation (WMI) event
+    subscription.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*New.*CimInstance.*.*'])
+    && ([ScriptBlockText] =~ ['.*.*Namespace.*root.*subscription.*.*']) && ([ScriptBlockText]
+    =~ ['.*.*Property.*.*']) && ([ScriptBlockText] =~ ['.*.*ClassName.*.*.*EventFilter.*.*'])
+    || ([ScriptBlockText] =~ ['.*.*ClassName.*CommandLineEventConsumer.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1546,003
+  exttype: SIEM
+- name: accessing_winapi_in_powershell
+  description: Detecting use WinAPI Functions in PowerShell
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*WaitForSingleObject.*'])
+    || ([ScriptBlockText] =~ ['.*QueueUserApc.*']) || ([ScriptBlockText] =~ ['.*RtlCreateUserThread.*'])
+    || ([ScriptBlockText] =~ ['.*OpenProcess.*']) || ([ScriptBlockText] =~ ['.*VirtualAlloc.*'])
+    || ([ScriptBlockText] =~ ['.*VirtualFree.*']) || ([ScriptBlockText] =~ ['.*WriteProcessMemory.*'])
+    || ([ScriptBlockText] =~ ['.*CreateUserThread.*']) || ([ScriptBlockText] =~ ['.*CloseHandle.*'])
+    || ([ScriptBlockText] =~ ['.*GetDelegateForFunctionPointer.*']) || ([ScriptBlockText]
+    =~ ['.*CreateThread.*']) || ([ScriptBlockText] =~ ['.*memcpy.*']) || ([ScriptBlockText]
+    =~ ['.*LoadLibrary.*']) || ([ScriptBlockText] =~ ['.*GetModuleHandle.*']) || ([ScriptBlockText]
+    =~ ['.*GetProcAddress.*']) || ([ScriptBlockText] =~ ['.*VirtualProtect.*']) ||
+    ([ScriptBlockText] =~ ['.*FreeLibrary.*']) || ([ScriptBlockText] =~ ['.*ReadProcessMemory.*'])
+    || ([ScriptBlockText] =~ ['.*CreateRemoteThread.*']) || ([ScriptBlockText] =~
+    ['.*AdjustTokenPrivileges.*']) || ([ScriptBlockText] =~ ['.*WriteByte.*']) ||
+    ([ScriptBlockText] =~ ['.*WriteInt32.*']) || ([ScriptBlockText] =~ ['.*OpenThreadToken.*'])
+    || ([ScriptBlockText] =~ ['.*PtrToString.*']) || ([ScriptBlockText] =~ ['.*FreeHGlobal.*'])
+    || ([ScriptBlockText] =~ ['.*ZeroFreeGlobalAllocUnicode.*']) || ([ScriptBlockText]
+    =~ ['.*OpenProcessToken.*']) || ([ScriptBlockText] =~ ['.*GetTokenInformation.*'])
+    || ([ScriptBlockText] =~ ['.*SetThreadToken.*']) || ([ScriptBlockText] =~ ['.*ImpersonateLoggedOnUser.*'])
+    || ([ScriptBlockText] =~ ['.*RevertToSelf.*']) || ([ScriptBlockText] =~ ['.*GetLogonSessionData.*'])
+    || ([ScriptBlockText] =~ ['.*CreateProcessWithToken.*']) || ([ScriptBlockText]
+    =~ ['.*DuplicateTokenEx.*']) || ([ScriptBlockText] =~ ['.*OpenWindowStation.*'])
+    || ([ScriptBlockText] =~ ['.*OpenDesktop.*']) || ([ScriptBlockText] =~ ['.*MiniDumpWriteDump.*'])
+    || ([ScriptBlockText] =~ ['.*AddSecurityPackage.*']) || ([ScriptBlockText] =~
+    ['.*EnumerateSecurityPackages.*']) || ([ScriptBlockText] =~ ['.*GetProcessHandle.*'])
+    || ([ScriptBlockText] =~ ['.*DangerousGetHandle.*']) || ([ScriptBlockText] =~
+    ['.*kernel32.*']) || ([ScriptBlockText] =~ ['.*Advapi32.*']) || ([ScriptBlockText]
+    =~ ['.*msvcrt.*']) || ([ScriptBlockText] =~ ['.*ntdll.*']) || ([ScriptBlockText]
+    =~ ['.*user32.*']) || ([ScriptBlockText] =~ ['.*secur32.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1106
+  exttype: SIEM
+- name: powershell_detect_virtualization_environment
+  description: Adversaries may employ various system checks to detect and avoid virtualization
+    and analysis environments. This may include changing behaviors based on the results
+    of checks for the presence of artifacts indicative of a virtual machine environment
+    (VME) or sandbox
+  condition: ([EventID] == 4104) && ([ScriptBlockText] =~ ['.*Get.*WmiObject.*'])
+    && (([ScriptBlockText] =~ ['.*MSAcpi.*ThermalZoneTemperature.*']) || ([ScriptBlockText]
+    =~ ['.*Win32.*ComputerSystem.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1497,001
+  exttype: SIEM
+- name: recon_information_for_export_with_powershell
+  description: Once established within a system or network, an adversary may use automated
+    techniques for collecting internal data
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Get.*Service.*.*'])
+    || ([ScriptBlockText] =~ ['.*Get.*ChildItem.*.*']) || ([ScriptBlockText] =~ ['.*Get.*Process.*.*']))
+    && ([ScriptBlockText] =~ ['.*.*.*.*env.*TEMP.*.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1119
+  exttype: SIEM
+- name: printnightmare_powershell_exploitation
+  description: Detects Commandlet name for PrintNightmare exploitation.
+  condition: ([EventID] == 4104) && ([ScriptBlockText] == ['Invoke-Nightmare'])
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: windows_powershell_web_request
+  description: Detects the use of various web request methods (including aliases)
+    via Windows PowerShell
+  condition: ([EventID] == 4104) && (([ScriptBlockText] =~ ['.*Invoke.*WebRequest.*'])
+    || ([ScriptBlockText] =~ ['.*iwr.*.*']) || ([ScriptBlockText] =~ ['.*wget.*.*'])
+    || ([ScriptBlockText] =~ ['.*curl.*.*']) || ([ScriptBlockText] =~ ['.*Net.WebClient.*'])
+    || ([ScriptBlockText] =~ ['.*Start.*BitsTransfer.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: syncappvpublishingserver_execution_to_bypass_powershell_restriction
+  description: Detects SyncAppvPublishingServer process execution which usually utilized
+    by adversaries to bypass PowerShell execution restrictions.
+  condition: message =~ 'SyncAppvPublishingServer.exe'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1218
+  exttype: SIEM
+- name: silence_eda_detection
+  description: Detects Silence empireDNSagent
+  condition: ([ScriptBlockText] =~ ['.*System.Diagnostics.Process.*']) && ([ScriptBlockText]
+    =~ ['.*Stop.*Computer.*']) && ([ScriptBlockText] =~ ['.*Restart.*Computer.*'])
+    && ([ScriptBlockText] =~ ['.*Exception.*in.*execution.*']) && ([ScriptBlockText]
+    =~ ['.*.*cmdargs.*']) && ([ScriptBlockText] =~ ['.*Close.*Dnscat2Tunnel.*']) &&
+    ([ScriptBlockText] =~ ['.*set.*type=.*LookupType.*nserver.*']) && ([ScriptBlockText]
+    =~ ['.*.*Command.*.*.*nslookup.*2.*.*1.*.*.*Out.*String.*']) && ([ScriptBlockText]
+    =~ ['.*New.*RandomDNSField.*']) && ([ScriptBlockText] =~ ['.*.*Convert.*.*.*ToString.*.*SYNOptions.*.*16.*.*'])
+    && ([ScriptBlockText] =~ ['.*.*Session.Dead.*=.*.*True.*']) && ([ScriptBlockText]
+    =~ ['.*.*Session.*.*Driver.*.*.*.*eq.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086,command_and_control,t1071,004,t1572,impact,t1529,g0091,s0363
+  exttype: SIEM

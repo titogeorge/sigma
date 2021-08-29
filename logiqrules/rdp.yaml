@@ -1,0 +1,17 @@
+name: rdp
+applications: ""
+definitions:
+- name: publicly_accessible_rdp_service
+  description: Detects connections from routable IPs to an RDP listener - which is
+    indicative of a publicly-accessible RDP service.
+  condition: (([src_ip] !~ ['192.168..*']) || ([src_ip] !~ ['10..*']) || ([src_ip]
+    !~ ['172.16..*']) || ([src_ip] !~ ['172.17..*']) || ([src_ip] !~ ['172.18..*'])
+    || ([src_ip] !~ ['172.19..*']) || ([src_ip] !~ ['172.20..*']) || ([src_ip] !~
+    ['172.21..*']) || ([src_ip] !~ ['172.22..*']) || ([src_ip] !~ ['172.23..*']) ||
+    ([src_ip] !~ ['172.24..*']) || ([src_ip] !~ ['172.25..*']) || ([src_ip] !~ ['172.26..*'])
+    || ([src_ip] !~ ['172.27..*']) || ([src_ip] !~ ['172.28..*']) || ([src_ip] !~
+    ['172.29..*']) || ([src_ip] !~ ['172.30..*']) || ([src_ip] !~ ['172.31..*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,t1021,001
+  exttype: SIEM

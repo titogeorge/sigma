@@ -1,0 +1,14 @@
+name: spring
+applications: ""
+definitions:
+- name: spring_framework_exceptions
+  description: Detects suspicious Spring framework exceptions that could indicate
+    exploitation attempts
+  condition: message =~ 'AccessDeniedException' || message =~ 'CsrfException' || message
+    =~ 'InvalidCsrfTokenException' || message =~ 'MissingCsrfTokenException' || message
+    =~ 'CookieTheftException' || message =~ 'InvalidCookieException' || message =~
+    'RequestRejectedException'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

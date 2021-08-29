@@ -1,0 +1,16 @@
+name: django
+applications: ""
+definitions:
+- name: django_framework_exceptions
+  description: Detects suspicious Django web application framework exceptions that
+    could indicate exploitation attempts
+  condition: message =~ 'SuspiciousOperation' || message =~ 'DisallowedHost' || message
+    =~ 'DisallowedModelAdminLookup' || message =~ 'DisallowedModelAdminToField' ||
+    message =~ 'DisallowedRedirect' || message =~ 'InvalidSessionKey' || message =~
+    'RequestDataTooBig' || message =~ 'SuspiciousFileOperation' || message =~ 'SuspiciousMultipartForm'
+    || message =~ 'SuspiciousSession' || message =~ 'TooManyFieldsSent' || message
+    =~ 'PermissionDenied'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

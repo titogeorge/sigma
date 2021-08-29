@@ -1,0 +1,33 @@
+name: http
+applications: ""
+definitions:
+- name: executable_from_webdav
+  description: Detects executable access via webdav6. Can be seen in APT 29 such as
+    from the emulated APT 29 hackathon https://github.com/OTRF/detection-hackathon-apt29/
+  condition: ([c-useragent] =~ ['.*WebDAV.*']) || ([c-uri] =~ ['.*webdav.*']) && ([resp_mime_types]
+    =~ ['.*dosexec.*']) || ([c-uri] =~ ['.*.exe'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1105
+  exttype: SIEM
+- name: potential_exfiltration_of_compressed_files
+  description: This rule detects potential exfiltration by looking for a few compression
+    extensions in the uri and signs of compression in the mime type, file type, and
+    http body
+  condition: (([uri] =~ ['.*.7z']) || ([uri] =~ ['.*.zip']) || ([uri] =~ ['.*.rar']))
+    && ([mime_types] =~ ['.*compressed']) || ([filetype] =~ ['.*compressed']) || ([http.bodyMagic]
+    =~ ['.*compressed']) && ([http.method] == ['PUT'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1560,001,t1005
+  exttype: SIEM
+- name: webdav_put_request
+  description: A General detection for WebDav user-agent being used to PUT files on
+    a WebDav network share. This could be an indicator of exfiltration.
+  condition: ([user_agent] =~ ['.*WebDAV.*']) && ([method] == ['PUT']) && (([id_resp_h]
+    !~ ['192.168.0.0.*16']) || ([id_resp_h] !~ ['172.16.0.0.*12']) || ([id_resp_h]
+    !~ ['10.0.0.0.*8']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1048,003
+  exttype: SIEM

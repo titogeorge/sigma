@@ -1,0 +1,15 @@
+name: printservice-admin
+applications: ""
+definitions:
+- name: possible_cve_2021_1675_print_spooler_exploitation
+  description: Detects events of driver load errors in print service logs that could
+    be a sign of successful exploitation attempts of print spooler vulnerability CVE-2021-1675
+  condition: (([EventID] == 808) || ([EventID] == 4909)) && (([ErrorCode] =~ ['0x45A'])
+    || ([ErrorCode] =~ ['0x7e'])) || message =~ 'The.*print.*spooler.*failed.*to.*load.*a.*plug.*in.*module'
+    || message =~ 'MyExploit.dll' || message =~ 'evil.dll' || message =~ '.*addCube.dll'
+    || message =~ '.*rev.dll' || message =~ '.*rev2.dll' || message =~ '.*main64.dll'
+    || message =~ '.*mimilib.dll' || message =~ '.*mimispool.dll'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution
+  exttype: SIEM

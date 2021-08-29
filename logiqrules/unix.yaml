@@ -1,0 +1,12 @@
+name: unix
+applications: ""
+definitions:
+- name: buffer_overflow_attempts
+  description: Detects buffer overflow attempts in Unix system log files
+  condition: message =~ 'attempt.*to.*execute.*code.*on.*stack.*by' || message =~
+    'FTP.*LOGIN.*FROM.*..*.*0bin0sh' || message =~ 'rpc.statd.*.*d.*.*.*.*gethostbyname.*error.*for'
+    || message =~ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM

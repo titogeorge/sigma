@@ -1,0 +1,260 @@
+name: macos
+applications: ""
+definitions:
+- name: startup_items
+  description: Detects creation of startup item plist files that automatically get
+    executed at boot initialization to establish persistence.
+  condition: ([TargetFilename] =~ ['.*.*Library.*StartupItems.*.*']) && ([TargetFilename]
+    =~ ['.*.plist'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence,privilege_escalation,t1037,005
+  exttype: SIEM
+- name: macos_remote_system_discovery
+  description: Detects the enumeration of other remote systems.
+  condition: (([Image] =~ ['.*.*arp'])) && (([CommandLine] =~ ['.*.*a.*'])) || (([Image]
+    =~ ['.*.*ping'])) && (([CommandLine] =~ ['.*.*10..*']) || ([CommandLine] =~ ['.*.*192.168..*'])
+    || ([CommandLine] =~ ['.*.*172.16..*']) || ([CommandLine] =~ ['.*.*172.17..*'])
+    || ([CommandLine] =~ ['.*.*172.18..*']) || ([CommandLine] =~ ['.*.*172.19..*'])
+    || ([CommandLine] =~ ['.*.*172.20..*']) || ([CommandLine] =~ ['.*.*172.21..*'])
+    || ([CommandLine] =~ ['.*.*172.22..*']) || ([CommandLine] =~ ['.*.*172.23..*'])
+    || ([CommandLine] =~ ['.*.*172.24..*']) || ([CommandLine] =~ ['.*.*172.25..*'])
+    || ([CommandLine] =~ ['.*.*172.26..*']) || ([CommandLine] =~ ['.*.*172.27..*'])
+    || ([CommandLine] =~ ['.*.*172.28..*']) || ([CommandLine] =~ ['.*.*172.29..*'])
+    || ([CommandLine] =~ ['.*.*172.30..*']) || ([CommandLine] =~ ['.*.*172.31..*'])
+    || ([CommandLine] =~ ['.*.*127..*']) || ([CommandLine] =~ ['.*.*169.254..*']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1018
+  exttype: SIEM
+- name: suspicious_history_file_operations
+  description: Detects commandline operations on shell history files
+  condition: (([CommandLine] =~ ['.*.bash.*history.*']) || ([CommandLine] =~ ['.*.zsh.*history.*'])
+    || ([CommandLine] =~ ['.*.zhistory.*']) || ([CommandLine] =~ ['.*.history.*'])
+    || ([CommandLine] =~ ['.*.sh.*history.*']) || ([CommandLine] =~ ['.*fish.*history.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1552,003
+  exttype: SIEM
+- name: macos_network_service_scanning
+  description: Detects enumeration of local or remote network services.
+  condition: (([Image] =~ ['.*.*nc']) || ([Image] =~ ['.*.*netcat'])) && ([CommandLine]
+    !~ ['.*l.*']) || (([Image] =~ ['.*.*nmap']) || ([Image] =~ ['.*.*telnet']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1046
+  exttype: SIEM
+- name: file_time_attribute_change
+  description: Detect file time attribute change to hide new or changes to existing
+    files.
+  condition: ([Image] =~ ['.*.*touch']) && (([CommandLine] =~ ['.*.*t.*']) || ([CommandLine]
+    =~ ['.*.*acmr.*']) || ([CommandLine] =~ ['.*.*d.*']) || ([CommandLine] =~ ['.*.*r.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,006
+  exttype: SIEM
+- name: local_groups_discovery
+  description: Detects enumeration of local system groups
+  condition: (([Image] =~ ['.*.*dscacheutil'])) && ([CommandLine] =~ ['.*.*q.*'])
+    && ([CommandLine] =~ ['.*group.*']) || (([Image] =~ ['.*.*cat'])) && (([CommandLine]
+    =~ ['.*.*etc.*group.*'])) || (([Image] =~ ['.*.*dscl'])) && ([CommandLine] =~
+    ['.*.*list.*']) && ([CommandLine] =~ ['.*.*groups.*'])
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1069,001
+  exttype: SIEM
+- name: network_sniffing
+  description: Detects the usage of tooling to sniff network traffic. An adversary
+    may place a network interface into promiscuous mode to passively access data in
+    transit over the network, or use span ports to capture a larger amount of data.
+  condition: (([Image] =~ ['.*.*tcpdump']) || ([Image] =~ ['.*.*tshark']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,credential_access,t1040
+  exttype: SIEM
+- name: local_system_accounts_discovery
+  description: Detects enumeration of local systeam accounts on MacOS
+  condition: (([Image] =~ ['.*.*dscl'])) && ([CommandLine] =~ ['.*list.*']) && ([CommandLine]
+    =~ ['.*.*users.*']) || (([Image] =~ ['.*.*dscacheutil'])) && ([CommandLine] =~
+    ['.*.*q.*']) && ([CommandLine] =~ ['.*user.*']) || (([CommandLine] =~ ['.*.*x.*0.*.*.*']))
+    || (([Image] =~ ['.*.*cat'])) && (([CommandLine] =~ ['.*.*etc.*passwd.*']) ||
+    ([CommandLine] =~ ['.*.*etc.*sudoers.*'])) || (([Image] =~ ['.*.*id'])) || (([Image]
+    =~ ['.*.*lsof'])) && (([CommandLine] =~ ['.*.*u.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1087,001
+  exttype: SIEM
+- name: gui_input_capture___macos
+  description: Detects attempts to use system dialog prompts to capture user credentials
+  condition: (([Image] =~ ['.*usr.*sbin.*osascript'])) && ([Commandline] =~ ['.*.*e.*'])
+    && ([Commandline] =~ ['.*display.*']) && ([Commandline] =~ ['.*dialog.*']) &&
+    ([Commandline] =~ ['.*answer.*']) && (([Commandline] =~ ['.*admin.*']) || ([Commandline]
+    =~ ['.*administrator.*']) || ([Commandline] =~ ['.*authenticate.*']) || ([Commandline]
+    =~ ['.*authentication.*']) || ([Commandline] =~ ['.*credentials.*']) || ([Commandline]
+    =~ ['.*pass.*']) || ([Commandline] =~ ['.*password.*']) || ([Commandline] =~ ['.*unlock.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1056,002
+  exttype: SIEM
+- name: macos_scripting_interpreter_applescript
+  description: Detects execution of AppleScript of the macOS scripting language AppleScript.
+  condition: (([Image] =~ ['.*.*osascript'])) && ([CommandLine] =~ ['.*.*e.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,002
+  exttype: SIEM
+- name: scheduled_cron_task_job
+  description: Detects abuse of the cron utility to perform task scheduling for initial
+    or recurring execution of malicious code. Detection will focus on crontab jobs
+    uploaded from the tmp folder.
+  condition: (([Image] =~ ['.*.*crontab'])) && (([CommandLine] =~ ['.*.*tmp.*.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,persistence,privilege_escalation,t1053,003
+  exttype: SIEM
+- name: system_network_connections_discovery
+  description: Detects usage of system utilities to discover system network connections
+  condition: (([Image] =~ ['.*usr.*bin.*who']) || ([Image] =~ ['.*usr.*bin.*w']) ||
+    ([Image] =~ ['.*usr.*bin.*last']) || ([Image] =~ ['.*usr.*sbin.*lsof']) || ([Image]
+    =~ ['.*usr.*sbin.*netstat']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1049
+  exttype: SIEM
+- name: system_shutdown_reboot
+  description: Adversaries may shutdown/reboot systems to interrupt access to, or
+    aid in the destruction of, those systems.
+  condition: (([Image] =~ ['.*.*shutdown']) || ([Image] =~ ['.*.*reboot']) || ([Image]
+    =~ ['.*.*halt']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,impact,t1529
+  exttype: SIEM
+- name: split_a_file_into_pieces
+  description: Detection use of the command "split" to split files into parts and
+    possible transfer.
+  condition: ([Image] =~ ['.*.*split'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1030
+  exttype: SIEM
+- name: system_network_discovery___macos
+  description: Detects enumeration of local network configuration
+  condition: (([Image] =~ ['.*usr.*sbin.*netstat']) || ([Image] =~ ['.*sbin.*ifconfig'])
+    || ([Image] =~ ['.*usr.*sbin.*ipconfig']) || ([Image] =~ ['.*usr.*libexec.*ApplicationFirewall.*socketfilterfw'])
+    || ([Image] =~ ['.*usr.*sbin.*networksetup']) || ([Image] =~ ['.*usr.*sbin.*arp']))
+    || ([Image] == ['/usr/bin/defaults']) && ([Commandline] =~ ['.*read.*']) && ([Commandline]
+    =~ ['.*.*Library.*Preferences.*com.apple.alf.*'])
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1016
+  exttype: SIEM
+- name: macos_emond_launch_daemon
+  description: Detects additions to the Emond Launch Daemon that adversaries may use
+    to gain persistence and elevate privileges.
+  condition: ([TargetFilename] =~ ['.*.*etc.*emond.d.*rules.*.*']) && ([TargetFilename]
+    =~ ['.*.plist']) || ([TargetFilename] =~ ['.*.*private.*var.*db.*emondClients.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,privilege_escalation,t1546,014
+  exttype: SIEM
+- name: credentials_in_files
+  description: Detecting attempts to extract passwords with grep and laZagne
+  condition: (([Image] =~ ['.*.*grep'])) && (([CommandLine] =~ ['.*password.*']))
+    || ([CommandLine] =~ ['.*laZagne.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1552,001
+  exttype: SIEM
+- name: binary_padding
+  description: Adversaries may use binary padding to add junk data and change the
+    on-disk representation of malware. This rule detect using dd and truncate to add
+    a junk data to file.
+  condition: (([Image] =~ ['.*.*truncate'])) && (([CommandLine] =~ ['.*.*s.*'])) ||
+    (([Image] =~ ['.*.*dd'])) && (([CommandLine] =~ ['.*if=.*'])) && ([CommandLine]
+    !~ ['.*of=.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1027,001
+  exttype: SIEM
+- name: security_software_discovery
+  description: Detects usage of system utilities (only grep for now) to discover security
+    software discovery
+  condition: ([Image] == ['/usr/bin/grep']) && (([CommandLine] =~ ['.*nessusd.*'])
+    || ([CommandLine] =~ ['.*santad.*']) || ([CommandLine] =~ ['.*CbDefense.*']) ||
+    ([CommandLine] =~ ['.*falcond.*']) || ([CommandLine] =~ ['.*td.*agent.*']) ||
+    ([CommandLine] =~ ['.*packetbeat.*']) || ([CommandLine] =~ ['.*filebeat.*']) ||
+    ([CommandLine] =~ ['.*auditbeat.*']) || ([CommandLine] =~ ['.*osqueryd.*']) ||
+    ([CommandLine] =~ ['.*BlockBlock.*']) || ([CommandLine] =~ ['.*LuLu.*'])) || ([CommandLine]
+    =~ ['.*Little.*']) && ([CommandLine] =~ ['.*Snitch.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,discovery,t1518,001
+  exttype: SIEM
+- name: disable_security_tools
+  description: Detects disabling security tools
+  condition: ([Image] == ['/bin/launchctl']) && ([CommandLine] =~ ['.*unload.*'])
+    && (([CommandLine] =~ ['.*com.objective.*see.lulu.plist.*']) || ([CommandLine]
+    =~ ['.*com.objective.*see.blockblock.plist.*']) || ([CommandLine] =~ ['.*com.google.santad.plist.*'])
+    || ([CommandLine] =~ ['.*com.carbonblack.defense.daemon.plist.*']) || ([CommandLine]
+    =~ ['.*com.carbonblack.daemon.plist.*']) || ([CommandLine] =~ ['.*at.obdev.littlesnitchd.plist.*'])
+    || ([CommandLine] =~ ['.*com.tenablesecurity.nessusagent.plist.*']) || ([CommandLine]
+    =~ ['.*com.opendns.osx.RoamingClientConfigUpdater.plist.*']) || ([CommandLine]
+    =~ ['.*com.crowdstrike.falcond.plist.*']) || ([CommandLine] =~ ['.*com.crowdstrike.userdaemon.plist.*'])
+    || ([CommandLine] =~ ['.*osquery.*']) || ([CommandLine] =~ ['.*filebeat.*']) ||
+    ([CommandLine] =~ ['.*auditbeat.*']) || ([CommandLine] =~ ['.*packetbeat.*'])
+    || ([CommandLine] =~ ['.*td.*agent.*'])) || ([Image] == ['/usr/sbin/spctl']) &&
+    ([CommandLine] =~ ['.*disable.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,001
+  exttype: SIEM
+- name: gatekeeper_bypass_via_xattr
+  description: Detects macOS Gatekeeper bypass via xattr utility
+  condition: ([Image] =~ ['.*.*xattr']) && ([CommandLine] =~ ['.*.*r.*']) && ([CommandLine]
+    =~ ['.*com.apple.quarantine.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1553,001
+  exttype: SIEM
+- name: credentials_from_password_stores___keychain
+  description: Detects passwords dumps from Keychain
+  condition: ([Image] == ['/usr/bin/security']) && (([CommandLine] =~ ['.*find.*certificate.*'])
+    || ([CommandLine] =~ ['.*.*export.*.*'])) || (([CommandLine] =~ ['.*.*dump.*keychain.*.*'])
+    || ([CommandLine] =~ ['.*.*login.*keychain.*.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1555,001
+  exttype: SIEM
+- name: indicator_removal_on_host___clear_mac_system_logs
+  description: Detects deletion of local audit logs
+  condition: ([Image] =~ ['.*.*rm']) && ([CommandLine] =~ ['.*.*var.*log.*']) || ([Commandline]
+    =~ ['.*.*Users.*.*']) && ([Commandline] =~ ['.*.*Library.*Logs.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,002
+  exttype: SIEM
+- name: decode_base64_encoded_text
+  description: Detects usage of base64 utility to decode arbitrary base64-encoded
+    text
+  condition: ([Image] == ['/usr/bin/base64']) && ([CommandLine] =~ ['.*.*d.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1027
+  exttype: SIEM
+- name: creation_of_a_local_user_account
+  description: Detects the creation of a new user account. Such accounts may be used
+    for persistence that do not require persistent remote access tools to be deployed
+    on the system.
+  condition: (([Image] =~ ['.*.*dscl'])) && (([CommandLine] =~ ['.*create.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,t1136,001,persistence
+  exttype: SIEM
+- name: screen_capture___macos
+  description: Detects attempts to use screencapture to collect macOS screenshots
+  condition: ([Image] == ['/usr/sbin/screencapture'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,collection,t1113
+  exttype: SIEM

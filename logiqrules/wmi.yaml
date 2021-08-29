@@ -1,0 +1,13 @@
+name: wmi
+applications: ""
+definitions:
+- name: wmi_persistence
+  description: Detects suspicious WMI event filter and command line event consumer
+    based on WMI and Security Logs.
+  condition: ([EventID] == 5861) && message =~ 'ActiveScriptEventConsumer' || message
+    =~ 'CommandLineEventConsumer' || message =~ 'CommandLineTemplate' || ([EventID]
+    == 5859)
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,privilege_escalation,t1084,t1546,003
+  exttype: SIEM

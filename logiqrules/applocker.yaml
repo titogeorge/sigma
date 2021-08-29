@@ -1,0 +1,12 @@
+name: applocker
+applications: ""
+definitions:
+- name: file_was_not_allowed_to_run
+  description: Detect run not allowed files. Applocker is a very useful tool, especially
+    on servers where unprivileged users have access. For example terminal servers.
+    You need configure applocker and log collect to receive these events.
+  condition: (([EventID] == 8004) || ([EventID] == 8007))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1086,t1064,t1204,t1035,002,t1059,001,003,005,006,007
+  exttype: SIEM

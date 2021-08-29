@@ -1,0 +1,19 @@
+name: ntlm
+applications: ""
+definitions:
+- name: ntlm_logon
+  description: Detects logons using NTLM, which could be caused by a legacy source
+    or attackers
+  condition: ([EventID] == 8002) && ([CallingProcessName] =~ ['.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,t1075,t1550,002
+  exttype: SIEM
+- name: potential_remote_desktop_connection_to_non_domain_host
+  description: Detects logons using NTLM to hosts that are potentially not part of
+    the domain.
+  condition: ([EventID] == 8001) && ([TargetName] =~ ['TERMSRV.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1219
+  exttype: SIEM

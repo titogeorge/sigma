@@ -1,0 +1,59 @@
+name: msexchange-management
+applications: ""
+definitions:
+- name: mailbox_export_to_exchange_webserver
+  description: Detects a successful export of an Exchange mailbox to untypical directory
+    or with aspx name suffix which can be used to place a webshell or the needed role
+    assignment for it
+  condition: message =~ 'New.*MailboxExportRequest' && message =~ '.*.*Mailbox.*'
+    && message =~ '.*FilePath.*.*.*.*localhost.*C.*' || message =~ '.*FilePath.*.*.*.*127.0.0.1.*C.*'
+    || message =~ '.aspx' || message =~ 'New.*ManagementRoleAssignment' && message
+    =~ '.*.*Role.*.*Mailbox.*Import.*Export.*' && message =~ '.*.*User.*'
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,t1505,003
+  exttype: SIEM
+- name: certificate_request_export_to_exchange_webserver
+  description: Detects a write of an Exchange CSR to an untypical directory or with
+    aspx name suffix which can be used to place a webshell
+  condition: message =~ 'New.*ExchangeCertificate' && message =~ '.*.*GenerateRequest'
+    && message =~ '.*.*BinaryEncoded' && message =~ '.*.*RequestFile' && message =~
+    '.*.*.*.*localhost.*.*C.*' || message =~ '.*.*.*.*127.0.0.1.*.*C.*' || message
+    =~ 'C.*.*.*inetpub' || message =~ '.aspx'
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,t1505,003
+  exttype: SIEM
+- name: failed_msexchange_transport_agent_installation
+  description: Detects a failed installation of a Exchange Transport Agent
+  condition: ([EventID] == 6) && message =~ 'Install.*TransportAgent'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence,t1505,002
+  exttype: SIEM
+- name: set_oabvirtualdirectory_externalurl_property
+  description: Rule to detect an adversary setting OabVirtualDirectory External URL
+    property to a script
+  condition: message =~ 'Set.*OabVirtualDirectory' && message =~ 'ExternalUrl' &&
+    message =~ 'Page.*Load' && message =~ 'script'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence,t1505,003
+  exttype: SIEM
+- name: proxylogon_msexchange_oabvirtualdirectory
+  description: Detects specific patterns found after a successful ProxyLogon exploitation
+    in relation to a Commandlet invocation of Set-OabVirtualDirectory
+  condition: message =~ 'OabVirtualDirectory' && message =~ '.*.*ExternalUrl.*' &&
+    message =~ 'eval.*request' || message =~ 'http.*.*.*f.*.*script' || message =~
+    '.*unsafe.*.*.*' || message =~ 'function.*Page.*Load.*.*'
+  level: critical
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: msexchange_transport_agent_installation
+  description: Detects the Installation of a Exchange Transport Agent
+  condition: message =~ 'Install.*TransportAgent'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,t1505,002
+  exttype: SIEM

@@ -1,0 +1,209 @@
+name: cloudtrail
+applications: ""
+definitions:
+- name: aws_ec2_disable_ebs_encryption
+  description: Identifies disabling of default Amazon Elastic Block Store (EBS) encryption
+    in the current region. Disabling default encryption does not change the encryption
+    status of your existing volumes.
+  condition: ([eventSource] == ['ec2.amazonaws.com']) && ([eventName] == ['DisableEbsEncryptionByDefault'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact,t1486,t1565
+  exttype: SIEM
+- name: aws_securityhub_findings_evasion
+  description: Detects the modification of the findings on SecurityHub.
+  condition: ([eventSource] == ['securityhub.amazonaws.com']) && (([eventName] =~
+    ['BatchUpdateFindings']) || ([eventName] =~ ['DeleteInsight']) || ([eventName]
+    =~ ['UpdateFindings']) || ([eventName] =~ ['UpdateInsight']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562
+  exttype: SIEM
+- name: aws_sts_getsessiontoken_misuse
+  description: Identifies the suspicious use of GetSessionToken. Tokens could be created
+    and used by attackers to move laterally and escalate privileges.
+  condition: ([eventSource] == ['sts.amazonaws.com']) && ([eventName] == ['GetSessionToken'])
+    && ([userIdentity.type] == ['IAMUser'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,privilege_escalation,t1548,t1550,001
+  exttype: SIEM
+- name: aws_rds_master_password_change
+  description: Detects the change of database master password. It may be a part of
+    data exfiltration.
+  condition: ([eventSource] == ['rds.amazonaws.com']) && ([responseElements.pendingModifiedValues.masterUserPassword]
+    =~ ['.*']) && ([eventName] == ['ModifyDBInstance'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1020
+  exttype: SIEM
+- name: restore_public_aws_rds_instance
+  description: Detects the recovery of a new public database instance from a snapshot.
+    It may be a part of data exfiltration.
+  condition: ([eventSource] == ['rds.amazonaws.com']) && ([responseElements.publiclyAccessible]
+    == ['true']) && ([eventName] == ['RestoreDBInstanceFromDBSnapshot'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1020
+  exttype: SIEM
+- name: aws_s3_data_management_tampering
+  description: Detects when a user tampers with S3 data management in Amazon Web Services.
+  condition: ([eventSource] == ['s3.amazonaws.com']) && (([eventName] =~ ['PutBucketLogging'])
+    || ([eventName] =~ ['PutBucketWebsite']) || ([eventName] =~ ['PutEncryptionConfiguration'])
+    || ([eventName] =~ ['PutLifecycleConfiguration']) || ([eventName] =~ ['PutReplicationConfiguration'])
+    || ([eventName] =~ ['ReplicateObject']) || ([eventName] =~ ['RestoreObject']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1537
+  exttype: SIEM
+- name: aws_user_login_profile_was_modified
+  description: |
+    An attacker with the iam:UpdateLoginProfile permission on other users can change the password used to login to the AWS console on any user that already has a login profile setup.
+    With this alert, it is used to detect anyone is changing password on behalf of other users.
+  condition: ([eventSource] == ['iam.amazonaws.com']) && ([eventName] == ['UpdateLoginProfile'])
+    && ([userIdentity.arn] !~ ['.*responseElements.accessKey.userName.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence,t1098
+  exttype: SIEM
+- name: aws_efs_fileshare_modified_or_deleted
+  description: Detects when a EFS Fileshare is modified or deleted. You can't delete
+    a file system that is in use. If the file system has any mount targets, the adversary
+    must first delete them, so deletion of a mount will occur before deletion of a
+    fileshare.
+  condition: ([eventSource] == ['elasticfilesystem.amazonaws.com']) && ([eventName]
+    == ['DeleteFileSystem'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: aws_ec2_startup_shell_script_change
+  description: Detects changes to the EC2 instance startup script. The shell script
+    will be executed as root/SYSTEM every time the specific instances are booted up.
+  condition: ([eventSource] == ['ec2.amazonaws.com']) && ([requestParameters.userData]
+    =~ ['.*']) && ([eventName] == ['ModifyInstanceAttribute'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086,003,004,t1064
+  exttype: SIEM
+- name: aws_elasticache_security_group_modified_or_deleted
+  description: Identifies when an ElastiCache security group has been modified or
+    deleted.
+  condition: ([eventSource] == ['elasticache.amazonaws.com']) && (([eventName] =~
+    ['DeleteCacheSecurityGroup']) || ([eventName] =~ ['AuthorizeCacheSecurityGroupIngress'])
+    || ([eventName] =~ ['RevokeCacheSecurityGroupIngress']) || ([eventName] =~ ['AuthorizeCacheSecurityGroupEgress'])
+    || ([eventName] =~ ['RevokeCacheSecurityGroupEgress']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,impact,t1531
+  exttype: SIEM
+- name: aws_config_disabling_channel_recorder
+  description: Detects AWS Config Service disabling
+  condition: ([eventSource] == ['config.amazonaws.com']) && (([eventName] =~ ['DeleteDeliveryChannel'])
+    || ([eventName] =~ ['StopConfigurationRecorder']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,001,t1089
+  exttype: SIEM
+- name: aws_snapshot_backup_exfiltration
+  description: Detects the modification of an EC2 snapshot's permissions to enable
+    access from another account
+  condition: ([eventSource] == ['ec2.amazonaws.com']) && ([eventName] == ['ModifySnapshotAttribute'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1537
+  exttype: SIEM
+- name: aws_iam_backdoor_users_keys
+  description: Detects AWS API key creation for a user by another user. Backdoored
+    users can be used to obtain persistence in the AWS environment. Also with this
+    alert, you can detect a flow of AWS keys in your org.
+  condition: ([eventSource] == ['iam.amazonaws.com']) && ([eventName] == ['CreateAccessKey'])
+    && ([userIdentity.arn] !~ ['.*responseElements.accessKey.userName.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,persistence,t1098
+  exttype: SIEM
+- name: aws_efs_fileshare_mount_modified_or_deleted
+  description: Detects when a EFS Fileshare Mount is modified or deleted. An adversary
+    breaking any file system using the mount target that is being deleted, which might
+    disrupt instances or applications using those mounts.
+  condition: ([eventSource] == ['elasticfilesystem.amazonaws.com']) && ([eventName]
+    == ['DeleteMountTarget'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: aws_sts_assumerole_misuse
+  description: Identifies the suspicious use of AssumeRole. Attackers could move laterally
+    and escalate privileges.
+  condition: ([eventSource] == ['sts.amazonaws.com']) && ([eventName] == ['AssumeRole'])
+    && ([userIdentity.sessionContext.sessionIssuer.type] == ['Role'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,privilege_escalation,t1548,t1550,001
+  exttype: SIEM
+- name: aws_route_53_domain_transfer_lock_disabled
+  description: Detects when a transfer lock was removed from a Route 53 domain. It
+    is recommended to refrain from performing this action unless intending to transfer
+    the domain to a different registrar.
+  condition: ([eventSource] == ['route53.amazonaws.com']) && ([eventName] == ['DisableDomainTransferLock'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence,credential_access,t1098
+  exttype: SIEM
+- name: aws_elasticache_security_group_created
+  description: Detects when an ElastiCache security group has been created.
+  condition: ([eventSource] == ['elasticache.amazonaws.com']) && ([eventName] == ['CreateCacheSecurityGroup'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence,t1136,003
+  exttype: SIEM
+- name: aws_guardduty_important_change
+  description: Detects updates of the GuardDuty list of trusted IPs, perhaps to disable
+    security alerts against malicious IPs.
+  condition: ([eventSource] == ['guardduty.amazonaws.com']) && ([eventName] == ['CreateIPSet'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,001,t1089
+  exttype: SIEM
+- name: aws_route_53_domain_transferred_to_another_account
+  description: Detects when a request has been made to transfer a Route 53 domain
+    to another AWS account.
+  condition: ([eventSource] == ['route53.amazonaws.com']) && ([eventName] == ['TransferDomainToAnotherAwsAccount'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence,credential_access,t1098
+  exttype: SIEM
+- name: aws_cloudtrail_important_change
+  description: Detects disabling, deleting and updating of a Trail
+  condition: ([eventSource] == ['cloudtrail.amazonaws.com']) && (([eventName] =~ ['StopLogging'])
+    || ([eventName] =~ ['UpdateTrail']) || ([eventName] =~ ['DeleteTrail']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,001,t1089
+  exttype: SIEM
+- name: aws_eks_cluster_created_or_deleted
+  description: Identifies when an EKS cluster is created or deleted.
+  condition: ([eventSource] == ['eks.amazonaws.com']) && (([eventName] =~ ['CreateCluster'])
+    || ([eventName] =~ ['DeleteCluster']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: aws_root_credentials
+  description: Detects AWS root account usage
+  condition: ([userIdentity.type] == ['Root']) && ([eventType] == ['AwsServiceEvent'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1078,004
+  exttype: SIEM
+- name: aws_ec2_vm_export_failure
+  description: An attempt to export an AWS EC2 instance has been detected. A VM Export
+    might indicate an attempt to extract information from an instance.
+  condition: ([eventName] == ['CreateInstanceExportTask']) && ([eventSource] == ['ec2.amazonaws.com'])
+    && ([errorMessage] =~ ['.*']) || ([errorCode] =~ ['.*']) || ([responseElements]
+    =~ ['.*Failure.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,collection,t1005,exfiltration,t1537
+  exttype: SIEM

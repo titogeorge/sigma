@@ -1,0 +1,226 @@
+name: system
+applications: ""
+definitions:
+- name: zerologon_exploitation_using_well_known_tools
+  description: This rule is designed to detect attempts to exploit Zerologon (CVE-2020-1472)
+    vulnerability using mimikatz zerologon module or other exploits from machine with
+    "kali" hostname.
+  condition: (([EventID] =~ ['5805']) || ([EventID] =~ ['5723'])) && message =~ 'kali'
+    || message =~ 'mimikatz'
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,t1210,lateral_movement
+  exttype: SIEM
+- name: psexec_tool_execution
+  description: Detects PsExec service installation and execution events (service and
+    Sysmon)
+  condition: ([ServiceName] == ['PSEXESVC']) && ([EventID] == 7045) && ([ServiceFileName]
+    =~ ['.*.*PSEXESVC.exe']) || ([EventID] == 7036)
+  level: low
+  ruletype: EVALUATE
+  tags: attack,execution,t1035,t1569,002,s0029
+  exttype: SIEM
+- name: meterpreter_or_cobalt_strike_getsystem_service_installation
+  description: Detects the use of getsystem Meterpreter/Cobalt Strike command by detecting
+    a specific service installation
+  condition: ([ServiceFileName] =~ ['.*cmd.*']) && ([ServiceFileName] =~ ['.*.*c.*'])
+    && ([ServiceFileName] =~ ['.*echo.*']) && ([ServiceFileName] =~ ['.*.*pipe.*.*.*'])
+    || ([ServiceFileName] =~ ['.*.*COMSPEC.*.*']) && ([ServiceFileName] =~ ['.*.*c.*'])
+    && ([ServiceFileName] =~ ['.*echo.*']) && ([ServiceFileName] =~ ['.*.*pipe.*.*.*'])
+    || ([ServiceFileName] =~ ['.*cmd.exe.*']) && ([ServiceFileName] =~ ['.*.*c.*'])
+    && ([ServiceFileName] =~ ['.*echo.*']) && ([ServiceFileName] =~ ['.*.*pipe.*.*.*'])
+    || ([ServiceFileName] =~ ['.*rundll32.*']) && ([ServiceFileName] =~ ['.*.dll.*a.*'])
+    && ([ServiceFileName] =~ ['.*.*p.*.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation,t1134,001,002
+  exttype: SIEM
+- name: malicious_service_installations
+  description: Detects known malicious service installs that only appear in cases
+    of lateral movement, credential dumping, and other suspicious activities.
+  condition: ([EventID] == 7045) && ([ServiceFileName] =~ ['.*.*PAExec.*']) || ([ServiceName]
+    == ['mssecsvc2.0']) || ([ServiceFileName] =~ ['.*net.*user.*']) || ([ServiceName]
+    == ['Java(TM) Virtual Machine Support Service'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,privilege_escalation,t1003,t1035,t1050,car,2013-09-005,t1543,003,t1569,002
+  exttype: SIEM
+- name: smbexec_py_service_installation
+  description: Detects the use of smbexec.py tool by detecting a specific service
+    installation
+  condition: ([EventID] == 7045) && ([ServiceName] == ['BTOBTO']) && ([ServiceFileName]
+    =~ ['.*.*execute.bat'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,execution,t1077,t1021,002,t1035,t1569
+  exttype: SIEM
+- name: tap_driver_installation
+  description: Well-known TAP software installation. Possible preparation for data
+    exfiltration using tunnelling techniques
+  condition: ([EventID] == 7045) && ([ImagePath] =~ ['.*tap0901.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1048
+  exttype: SIEM
+- name: processhacker_privilege_elevation
+  description: Detects a ProcessHacker tool that elevated privileges to a very high
+    level
+  condition: ([EventID] == 7045) && ([ServiceName] =~ ['ProcessHacker.*']) && ([AccountName]
+    == ['LocalSystem'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,privilege_escalation,t1543,003,t1569,002
+  exttype: SIEM
+- name: quarkspwdump_clearing_access_history
+  description: Detects QuarksPwDump clearing access history in hive
+  condition: ([EventID] == 16) && ([HiveName] =~ ['.*.*AppData.*Local.*Temp.*SAM.*'])
+    && ([HiveName] =~ ['.*.dmp'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,002
+  exttype: SIEM
+- name: turla_png_dropper_service
+  description: This method detects malicious services mentioned in Turla PNG dropper
+    report by NCC Group in November 2018
+  condition: ([EventID] == 7045) && ([ServiceName] == ['WerFaultSvc'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,g0010,t1050,t1543,003
+  exttype: SIEM
+- name: powershell_scripts_installed_as_services
+  description: Detects powershell script installed as a Service
+  condition: ([EventID] == 7045) && (([ServiceFileName] =~ ['.*powershell.*']) ||
+    ([ServiceFileName] =~ ['.*pwsh.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1569,002
+  exttype: SIEM
+- name: potential_rdp_exploit_cve_2019_0708
+  description: Detect suspicious error on protocol RDP, potential CVE-2019-0708
+  condition: (([EventID] == 56) || ([EventID] == 50)) && ([Source] == ['TermDD'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,t1210,car,2013-07-002
+  exttype: SIEM
+- name: volume_shadow_copy_mount
+  description: Detects volume shadow copy mount
+  condition: ([Source] == ['Microsoft-Windows-Ntfs']) && ([EventID] == 98) && ([DeviceName]
+    =~ ['.*HarddiskVolumeShadowCopy.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,002
+  exttype: SIEM
+- name: stonedrill_service_install
+  description: This method detects a service install of the malicious Microsoft Network
+    Realtime Inspection Service service described in StoneDrill report by Kaspersky
+  condition: ([EventID] == 7045) && ([ServiceName] == ['NtsSrv']) && ([ServiceFileName]
+    =~ ['.*.*LocalService'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence,g0064,t1050,t1543,003
+  exttype: SIEM
+- name: moriya_rootkit
+  description: Detects the use of Moriya rootkit as described in the securelist's
+    Operation TunnelSnake report
+  condition: ([EventID] == 7045) && ([ServiceName] == ['ZzNetSvc'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,privilege_escalation,t1543,003
+  exttype: SIEM
+- name: ntfs_vulnerability_exploitation
+  description: This the exploitation of a NTFS vulnerability as reported without many
+    details via Twitter
+  condition: ([EventID] == 55) && ([Origin] == ['File System Driver']) && ([Description]
+    =~ ['.*contains.*a.*corrupted.*file.*record.*']) && ([Description] =~ ['.*The.*name.*of.*the.*file.*is.*.*.*.*.*'])
+  level: critical
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: cobaltstrike_service_installations
+  description: Detects known malicious service installs that appear in cases in which
+    a Cobalt Strike beacon elevates privileges or lateral movement
+  condition: ([EventID] == 7045) && ([ServiceFileName] =~ ['.*ADMIN.*.*']) && ([ServiceFileName]
+    =~ ['.*.exe.*']) || ([ServiceFileName] =~ ['.*.*COMSPEC.*.*']) && ([ServiceFileName]
+    =~ ['.*start.*']) && ([ServiceFileName] =~ ['.*powershell.*']) || ([ServiceFileName]
+    =~ ['.*powershell.*.*nop.*.*w.*hidden.*.*encodedcommand.*']) || (([ServiceFileName]
+    =~ ['.*SUVYIChOZXctT2JqZWN0IE5ldC5XZWJjbGllbnQpLkRvd25sb2FkU3RyaW5nKCdodHRwOi8vMTI3LjAuMC4xO.*'])
+    || ([ServiceFileName] =~ ['.*lFWCAoTmV3LU9iamVjdCBOZXQuV2ViY2xpZW50KS5Eb3dubG9hZFN0cmluZygnaHR0cDovLzEyNy4wLjAuMT.*'])
+    || ([ServiceFileName] =~ ['.*JRVggKE5ldy1PYmplY3QgTmV0LldlYmNsaWVudCkuRG93bmxvYWRTdHJpbmcoJ2h0dHA6Ly8xMjcuMC4wLjE6.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,execution,privilege_escalation,lateral_movement,t1021,002,t1543,003,t1569
+  exttype: SIEM
+- name: turla_service_install
+  description: This method detects a service install of malicious services mentioned
+    in Carbon Paper - Turla report by ESET
+  condition: ([EventID] == 7045) && (([ServiceName] =~ ['srservice']) || ([ServiceName]
+    =~ ['ipvpn']) || ([ServiceName] =~ ['hkmsvc']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,persistence,g0010,t1050,t1543,003
+  exttype: SIEM
+- name: credential_dumping_tools_service_execution
+  description: Detects well-known credential dumping tools execution via service execution
+    events
+  condition: (([ServiceName] =~ ['.*fgexec.*']) || ([ServiceName] =~ ['.*wceservice.*'])
+    || ([ServiceName] =~ ['.*wce.*service.*']) || ([ServiceName] =~ ['.*pwdump.*'])
+    || ([ServiceName] =~ ['.*gsecdump.*']) || ([ServiceName] =~ ['.*cachedump.*'])
+    || ([ServiceName] =~ ['.*mimikatz.*']) || ([ServiceName] =~ ['.*mimidrv.*']))
+    || (([ImagePath] =~ ['.*fgexec.*']) || ([ImagePath] =~ ['.*dumpsvc.*']) || ([ImagePath]
+    =~ ['.*cachedump.*']) || ([ImagePath] =~ ['.*mimidrv.*']) || ([ImagePath] =~ ['.*gsecdump.*'])
+    || ([ImagePath] =~ ['.*servpw.*']) || ([ImagePath] =~ ['.*pwdump.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,execution,t1003,001,002,004,005,006,t1035,t1569,s0005
+  exttype: SIEM
+- name: sam_dump_to_appdata
+  description: Detects suspicious SAM dump activity as cause by QuarksPwDump and other
+    password dumpers
+  condition: ([EventID] == 16) && message =~ '.*AppData.*Local.*Temp.*SAM.*' && message
+    =~ '.dmp'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,002
+  exttype: SIEM
+- name: dhcp_server_error_failed_loading_the_callout_dll
+  description: This rule detects a DHCP server error in which a specified Callout
+    DLL (in registry) could not be loaded
+  condition: (([EventID] == 1031) || ([EventID] == 1032) || ([EventID] == 1034)) &&
+    ([Source] == ['Microsoft-Windows-DHCP-Server'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1073,t1574,002
+  exttype: SIEM
+- name: eventlog_cleared
+  description: One of the Windows Eventlogs has been cleared. e.g. caused by "wevtutil
+    cl" command execution
+  condition: ([EventID] == 104) && ([Source] == ['Microsoft-Windows-Eventlog'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,001,car,2016-04-002
+  exttype: SIEM
+- name: vulnerable_netlogon_secure_channel_connection_allowed
+  description: Detects that a vulnerable Netlogon secure channel connection was allowed,
+    which could be an indicator of CVE-2020-1472.
+  condition: ([EventID] == 5829)
+  level: high
+  ruletype: EVALUATE
+  tags: attack,privilege_escalation
+  exttype: SIEM
+- name: dhcp_server_loaded_the_callout_dll
+  description: This rule detects a DHCP server in which a specified Callout DLL (in
+    registry) was loaded
+  condition: ([EventID] == 1033) && ([Source] == ['Microsoft-Windows-DHCP-Server'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1073,t1574,002
+  exttype: SIEM
+- name: chafer_activity
+  description: Detects Chafer activity attributed to OilRig as reported in Nyotron
+    report in March 2018
+  condition: ([EventID] == 7045) && (([ServiceName] =~ ['SC.*Scheduled.*Scan']) ||
+    ([ServiceName] =~ ['UpdatMachine']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,g0049,t1053,005,s0111,t1050,t1543,003,defense_evasion,t1112,command_and_control,t1071,004
+  exttype: SIEM

@@ -1,0 +1,243 @@
+name: auditd
+applications: ""
+definitions:
+- name: system_information_discovery
+  description: Detects system information discovery commands
+  condition: ([type] == ['PATH']) && (([name] =~ ['.*sys.*class.*dmi.*id.*bios.*version'])
+    || ([name] =~ ['.*sys.*class.*dmi.*id.*product.*name']) || ([name] =~ ['.*sys.*class.*dmi.*id.*chassis.*vendor'])
+    || ([name] =~ ['.*proc.*scsi.*scsi']) || ([name] =~ ['.*proc.*ide.*hd0.*model'])
+    || ([name] =~ ['.*proc.*version']) || ([name] =~ ['.*etc.*.*version']) || ([name]
+    =~ ['.*etc.*.*release']) || ([name] =~ ['.*etc.*issue']))
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,discovery,t1082
+  exttype: SIEM
+- name: linux_network_service_scanning
+  description: Detects enumeration of local or remote network services.
+  condition: ([type] == ['SYSCALL']) && (([exe] =~ ['.*.*telnet']) || ([exe] =~ ['.*.*nmap'])
+    || ([exe] =~ ['.*.*netcat']) || ([exe] =~ ['.*.*nc'])) && ([key] == ['network_connect_4'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1046
+  exttype: SIEM
+- name: credentials_in_files
+  description: Detecting attempts to extract passwords with grep
+  condition: ([type] == ['EXECVE']) && message =~ 'grep' && message =~ 'password'
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1552,001
+  exttype: SIEM
+- name: system_shutdown_reboot
+  description: Adversaries may shutdown/reboot systems to interrupt access to, or
+    aid in the destruction of, those systems.
+  condition: ([type] == ['EXECVE']) && message =~ 'shutdown' || message =~ 'reboot'
+    || message =~ 'halt' || message =~ 'poweroff' || message =~ 'init' || message
+    =~ 'telinit' && message =~ '0' || message =~ '6'
+  level: informational
+  ruletype: EVALUATE
+  tags: attack,impact,t1529
+  exttype: SIEM
+- name: remove_immutable_file_attribute
+  description: Detects removing immutable file attribute.
+  condition: ([type] == ['EXECVE']) && ([a0] =~ ['.*chattr.*']) && ([a1] =~ ['.*.*i.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1222,002
+  exttype: SIEM
+- name: file_time_attribute_change
+  description: Detect file time attribute change to hide new or changes to existing
+    files.
+  condition: ([type] == ['EXECVE']) && message =~ 'touch' && message =~ '.*t' || message
+    =~ '.*acmr' || message =~ '.*d' || message =~ '.*r'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1070,006
+  exttype: SIEM
+- name: system_owner_or_user_discovery
+  description: Adversaries may use the information from System Owner/User Discovery
+    during automated discovery to shape follow-on behaviors, including whether or
+    not the adversary fully infects the target and/or attempts specific actions.
+  condition: ([type] == ['EXECVE']) && (([a0] =~ ['users']) || ([a0] =~ ['w']) ||
+    ([a0] =~ ['who']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1033
+  exttype: SIEM
+- name: program_executions_in_suspicious_folders
+  description: Detects program executions in suspicious non-program folders related
+    to malware or hacking activity
+  condition: ([type] == ['SYSCALL']) && (([exe] =~ ['.*tmp.*.*']) || ([exe] =~ ['.*var.*www.*.*'])
+    || ([exe] =~ ['.*home.*.*.*public.*html.*.*']) || ([exe] =~ ['.*usr.*local.*apache2.*.*'])
+    || ([exe] =~ ['.*usr.*local.*httpd.*.*']) || ([exe] =~ ['.*var.*apache.*.*'])
+    || ([exe] =~ ['.*srv.*www.*.*']) || ([exe] =~ ['.*home.*httpd.*html.*.*']) ||
+    ([exe] =~ ['.*srv.*http.*.*']) || ([exe] =~ ['.*usr.*share.*nginx.*html.*.*'])
+    || ([exe] =~ ['.*var.*lib.*pgsql.*data.*.*']) || ([exe] =~ ['.*usr.*local.*mysql.*data.*.*'])
+    || ([exe] =~ ['.*var.*lib.*mysql.*.*']) || ([exe] =~ ['.*var.*vsftpd.*.*']) ||
+    ([exe] =~ ['.*etc.*bind.*.*']) || ([exe] =~ ['.*var.*named.*.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: data_compressed
+  description: An adversary may compress data (e.g., sensitive documents) that is
+    collected prior to exfiltration in order to make it portable and minimize the
+    amount of data sent over the network.
+  condition: ([type] == ['execve']) && ([a0] == ['zip']) || ([a0] == ['gzip']) &&
+    ([a1] == ['-f']) || ([a0] == ['tar']) && ([a1] =~ ['.*.*c.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1560,001
+  exttype: SIEM
+- name: edit_of__bash_profile_and__bashrc
+  description: Detects change of user environment. Adversaries can insert code into
+    these files to gain persistence each time a user logs in or opens a new shell.
+  condition: ([type] == ['PATH']) && (([name] =~ ['.*home.*.*.*.bashrc']) || ([name]
+    =~ ['.*home.*.*.*.bash.*profile']) || ([name] =~ ['.*home.*.*.*.profile']) ||
+    ([name] =~ ['.*etc.*profile']) || ([name] =~ ['.*etc.*shells']) || ([name] =~
+    ['.*etc.*bashrc']) || ([name] =~ ['.*etc.*csh.cshrc']) || ([name] =~ ['.*etc.*csh.login']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,s0003,t1156,persistence,t1546,004
+  exttype: SIEM
+- name: logging_configuration_changes_on_linux_host
+  description: Detect changes of syslog daemons configuration files
+  condition: ([type] == ['PATH']) && (([name] =~ ['.*etc.*syslog.conf']) || ([name]
+    =~ ['.*etc.*rsyslog.conf']) || ([name] =~ ['.*etc.*syslog.*ng.*syslog.*ng.conf']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1054,t1562,006
+  exttype: SIEM
+- name: file_or_folder_permissions_change
+  description: Detects file and folder permission changes.
+  condition: ([type] == ['EXECVE']) && (([a0] =~ ['.*chmod.*']) || ([a0] =~ ['.*chown.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1222,002
+  exttype: SIEM
+- name: overwriting_the_file_with_dev_zero_or_null
+  description: Detects overwriting (effectively wiping/deleting) of a file.
+  condition: ([type] == ['EXECVE']) && ([a0] =~ ['.*dd.*']) && (([a1] =~ ['.*if=.*dev.*null.*'])
+    || ([a1] =~ ['.*if=.*dev.*zero.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,impact,t1485
+  exttype: SIEM
+- name: masquerading_as_linux_crond_process
+  description: Masquerading occurs when the name or location of an executable, legitimate
+    or malicious, is manipulated or abused for the sake of evading defenses and observation.
+    Several different variations of this technique have been observed.
+  condition: ([type] == ['execve']) && ([a0] == ['cp']) && ([a1] == ['-i']) && ([a2]
+    == ['/bin/sh']) && ([a3] =~ ['.*.*crond'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1036,003
+  exttype: SIEM
+- name: modification_of_ld_so_preload
+  description: Identifies modification of ld.so.preload for shared object injection.
+    This technique is used by attackers to load arbitrary code into processes.
+  condition: ([type] == ['PATH']) && ([name] == ['/etc/ld.so.preload'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1574,006
+  exttype: SIEM
+- name: suspicious_commands_linux
+  description: Detects relevant commands often related to malware or hacking activity
+  condition: ([type] == ['EXECVE']) && ([a0] == ['chmod']) && ([a1] == ['777']) ||
+    ([a0] == ['chmod']) && ([a1] == ['u+s']) || ([a0] == ['cp']) && ([a1] == ['/bin/ksh'])
+    || ([a0] == ['cp']) && ([a1] == ['/bin/sh'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,004
+  exttype: SIEM
+- name: suspicious_history_file_operations
+  description: Detects commandline operations on shell history files
+  condition: ([type] == ['EXECVE']) && message =~ '.bash.*history' || message =~ '.zsh.*history'
+    || message =~ '.zhistory' || message =~ '.history' || message =~ '.sh.*history'
+    || message =~ 'fish.*history'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1552,003
+  exttype: SIEM
+- name: network_sniffing
+  description: Network sniffing refers to using the network interface on a system
+    to monitor or capture information sent over a wired or wireless connection. An
+    adversary may place a network interface into promiscuous mode to passively access
+    data in transit over the network, or use span ports to capture a larger amount
+    of data.
+  condition: ([type] == ['execve']) && ([a1] == ['-c']) && ([a0] == ['tcpdump']) &&
+    ([a3] =~ ['.*.*i.*']) || ([a0] == ['tshark']) && ([a3] == ['-i'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,credential_access,discovery,t1040
+  exttype: SIEM
+- name: split_a_file_into_pieces
+  description: Detection use of the command "split" to split files into parts and
+    possible transfer.
+  condition: ([type] == ['SYSCALL']) && ([comm] == ['split'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1030
+  exttype: SIEM
+- name: auditing_configuration_changes_on_linux_host
+  description: Detect changes in auditd configuration files
+  condition: ([type] == ['PATH']) && (([name] =~ ['.*etc.*audit.*.*']) || ([name]
+    =~ ['.*etc.*libaudit.conf']) || ([name] =~ ['.*etc.*audisp.*.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1054,t1562,006
+  exttype: SIEM
+- name: binary_padding
+  description: Adversaries may use binary padding to add junk data and change the
+    on-disk representation of malware. This rule detect using dd and truncate to add
+    a junk data to file.
+  condition: ([type] == ['EXECVE']) && message =~ 'truncate' && message =~ '.*s' ||
+    message =~ 'dd' && message =~ 'if=' && message !~ 'of='
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1027,001
+  exttype: SIEM
+- name: password_policy_discovery
+  description: Detects password policy discovery commands
+  condition: ([type] == ['PATH']) && (([name] =~ ['.*etc.*pam.d.*common.*password'])
+    || ([name] =~ ['.*etc.*security.*pwquality.conf']) || ([name] =~ ['.*etc.*pam.d.*system.*auth'])
+    || ([name] =~ ['.*etc.*login.defs']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,discovery,t1201
+  exttype: SIEM
+- name: suspicious_c2_activities
+  description: Detects suspicious activities as declared by Florian Roth in its 'Best
+    Practice Auditd Configuration'. This includes the detection of the following commands;
+    wget, curl, base64, nc, netcat, ncat, ssh, socat, wireshark, rawshark, rdesktop,
+    nmap. These commands match a few techniques from the tactics "Command and Control",
+    including not exhaustively the following; Application Layer Protocol (T1071),
+    Non-Application Layer Protocol (T1095), Data Encoding (T1132)
+  condition: (([key] =~ ['susp.*activity']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control
+  exttype: SIEM
+- name: systemd_service_reload_or_start
+  description: Detects a reload or a start of a service.
+  condition: ([type] == ['EXECVE']) && ([a0] =~ ['.*systemctl.*']) && (([a1] =~ ['.*daemon.*reload.*'])
+    || ([a1] =~ ['.*start.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,persistence,t1543,002
+  exttype: SIEM
+- name: creation_of_an_user_account
+  description: Detects the creation of a new user account. Such accounts may be used
+    for persistence that do not require persistent remote access tools to be deployed
+    on the system.
+  condition: ([type] == ['SYSCALL']) && ([exe] =~ ['.*.*useradd'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,t1136,001,persistence
+  exttype: SIEM
+- name: webshell_remote_command_execution
+  description: Detects possible command execution by web application/web shell
+  condition: ([type] == ['SYSCALL']) && ([SYSCALL] == ['execve']) && ([key] == ['detect_execve_www'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,persistence,t1505,003
+  exttype: SIEM

@@ -1,0 +1,84 @@
+name: m365
+applications: ""
+definitions:
+- name: activity_performed_by_terminated_user
+  description: Detects when a Microsoft Cloud App Security reported for users whose
+    account were terminated in Azure AD, but still perform activities in other platforms
+    such as AWS or Salesforce. This is especially relevant for users who use another
+    account to manage resources, since these accounts are often not terminated when
+    a user leaves the company.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Activity
+    performed by terminated user']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,impact
+  exttype: SIEM
+- name: suspicious_inbox_forwarding
+  description: Detects when a Microsoft Cloud App Security reported suspicious email
+    forwarding rules, for example, if a user created an inbox rule that forwards a
+    copy of all emails to an external address.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Suspicious
+    inbox forwarding']) && ([status] == ['success'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1020
+  exttype: SIEM
+- name: activity_from_suspicious_ip_addresses
+  description: Detects when a Microsoft Cloud App Security reported users were active
+    from an IP address identified as risky by Microsoft Threat Intelligence. These
+    IP addresses are involved in malicious activities, such as Botnet C&C, and may
+    indicate compromised account.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Activity
+    from suspicious IP addresses']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1573
+  exttype: SIEM
+- name: logon_from_a_risky_ip_address
+  description: Detects when a Microsoft Cloud App Security reported when a user signs
+    into your sanctioned apps from a risky IP address.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Log
+    on from a risky IP address']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1078
+  exttype: SIEM
+- name: activity_from_infrequent_country
+  description: Detects when a Microsoft Cloud App Security reported when an activity
+    occurs from a location that wasn't recently or never visited by any user in the
+    organization.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Activity
+    from infrequent country']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1573
+  exttype: SIEM
+- name: activity_from_anonymous_ip_addresses
+  description: Detects when a Microsoft Cloud App Security reported when users were
+    active from an IP address that has been identified as an anonymous proxy IP address.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Activity
+    from anonymous IP addresses']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1573
+  exttype: SIEM
+- name: data_exfiltration_to_unsanctioned_apps
+  description: Detects when a Microsoft Cloud App Security reported when a user or
+    IP address uses an app that is not sanctioned to perform an activity that resembles
+    an attempt to exfiltrate information from your organization.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Data
+    exfiltration to unsanctioned apps']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1537
+  exttype: SIEM
+- name: suspicious_oauth_app_file_download_activities
+  description: Detects when a Microsoft Cloud App Security reported when an app downloads
+    multiple files from Microsoft SharePoint or Microsoft OneDrive in a manner that
+    is unusual for the user.
+  condition: ([eventSource] == ['SecurityComplianceCenter']) && ([eventName] == ['Suspicious
+    OAuth app file download activities']) && ([status] == ['success'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration
+  exttype: SIEM

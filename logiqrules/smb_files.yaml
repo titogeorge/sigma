@@ -1,0 +1,75 @@
+name: smb_files
+applications: ""
+definitions:
+- name: suspicious_access_to_sensitive_file_extensions___zeek
+  description: Detects known sensitive file extensions via Zeek
+  condition: (([name] =~ ['.*.pst']) || ([name] =~ ['.*.ost']) || ([name] =~ ['.*.msg'])
+    || ([name] =~ ['.*.nst']) || ([name] =~ ['.*.oab']) || ([name] =~ ['.*.edb'])
+    || ([name] =~ ['.*.nsf']) || ([name] =~ ['.*.bak']) || ([name] =~ ['.*.dmp'])
+    || ([name] =~ ['.*.kirbi']) || ([name] =~ ['.*.*groups.xml']) || ([name] =~ ['.*.rdp']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection
+  exttype: SIEM
+- name: transferring_files_with_credential_data_via_network_shares___zeek
+  description: Transferring files with well-known filenames (sensitive files with
+    credential data) using network shares
+  condition: (([name] =~ ['.*mimidrv']) || ([name] =~ ['.*lsass']) || ([name] =~ ['.*windows.*minidump.*'])
+    || ([name] =~ ['.*hiberfil']) || ([name] =~ ['.*sqldmpr']) || ([name] =~ ['.*sam'])
+    || ([name] =~ ['.*ntds.dit']) || ([name] =~ ['.*security']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,002,001,003
+  exttype: SIEM
+- name: possible_impacket_secretdump_remote_activity___zeek
+  description: Detect AD credential dumping using impacket secretdump HKTL. Based
+    on the SIGMA rules/windows/builtin/win_impacket_secretdump.yml
+  condition: ([path] =~ ['.*.*.*.*']) && ([path] =~ ['.*ADMIN.*.*']) && ([name] =~
+    ['.*SYSTEM32.*.*.*']) && ([name] =~ ['.*.tmp'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,002,004,003
+  exttype: SIEM
+- name: first_time_seen_remote_named_pipe___zeek
+  description: This detection excludes known namped pipes accessible remotely and
+    notify on newly observed ones, may help to detect lateral movement and remote
+    exec using named pipes
+  condition: ([path] =~ ['.*.*.*.*IPC.*']) && ([path] !~ ['.*.*.*.*IPC.*']) && (([name]
+    !~ ['atsvc']) || ([name] !~ ['samr']) || ([name] !~ ['lsarpc']) || ([name] !~
+    ['winreg']) || ([name] !~ ['netlogon']) || ([name] !~ ['srvsvc']) || ([name] !~
+    ['protected.*storage']) || ([name] !~ ['wkssvc']) || ([name] !~ ['browser']) ||
+    ([name] !~ ['netdfs']) || ([name] !~ ['svcctl']) || ([name] !~ ['spoolss']) ||
+    ([name] !~ ['ntsvcs']) || ([name] !~ ['LSM.*API.*service']) || ([name] !~ ['HydraLsPipe'])
+    || ([name] !~ ['TermSrv.*API.*service']) || ([name] !~ ['MsFteWds']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,t1077,t1021,002
+  exttype: SIEM
+- name: remote_task_creation_via_atsvc_named_pipe___zeek
+  description: Detects remote task creation via at.exe or API interacting with ATSVC
+    namedpipe
+  condition: ([path] =~ ['.*.*.*.*IPC.*']) && ([name] == ['atsvc'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,persistence,t1053,car,2013-05-004,2015-04-001,002
+  exttype: SIEM
+- name: smb_spoolss_name_piped_usage
+  description: Detects the use of the spoolss named pipe over SMB. This can be used
+    to trigger the authentication via NTLM of any machine that has the spoolservice
+    enabled.
+  condition: ([path] =~ ['.*IPC.*']) && ([name] == ['spoolss'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,t1021,002
+  exttype: SIEM
+- name: suspicious_psexec_execution___zeek
+  description: detects execution of psexec or paexec with renamed service name, this
+    rule helps to filter out the noise if psexec is used for legit purposes or if
+    attacker uses a different psexec client other than sysinternal one
+  condition: ([path] =~ ['.*.*.*.*.*']) && ([path] =~ ['.*.*IPC.*.*']) && (([name]
+    =~ ['.*.*stdin']) || ([name] =~ ['.*.*stdout']) || ([name] =~ ['.*.*stderr']))
+    && ([name] !~ ['.*.*.*.*.*']) && ([name] !~ ['.*.*IPC.*.*']) && ([path] !~ ['PSEXESVC.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,t1077,t1021,002
+  exttype: SIEM

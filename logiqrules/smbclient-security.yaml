@@ -1,0 +1,12 @@
+name: smbclient-security
+applications: ""
+definitions:
+- name: suspicious_rejected_smb_guest_logon_from_ip
+  description: Detect Attempt PrintNightmare (CVE-2021-1675) Remote code execution
+    in Windows Spooler Service
+  condition: ([EventID] == 31017) && ([Description] =~ ['.*Rejected.*an.*insecure.*guest.*logon.*'])
+    && ([UserName] == ['']) && ([ServerName] =~ ['.*1.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM

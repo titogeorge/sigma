@@ -1,0 +1,112 @@
+name: powershell-classic
+applications: ""
+definitions:
+- name: abusable_invoke_athremotefxvgpudisablementcommand
+  description: RemoteFXvGPUDisablement.exe is an abusable, signed PowerShell host
+    executable that was introduced in Windows 10 and Server 2019 (OS Build 17763.1339).
+  condition: ([HostApplication] =~ ['.*Invoke.*ATHRemoteFXvGPUDisablementCommand.*.*'])
+    && (([HostApplication] =~ ['.*.*ModuleName.*.*']) || ([HostApplication] =~ ['.*.*ModulePath.*.*'])
+    || ([HostApplication] =~ ['.*.*ScriptBlock.*.*']) || ([HostApplication] =~ ['.*.*RemoteFXvGPUDisablementFilePath.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1218
+  exttype: SIEM
+- name: zip_a_folder_with_powershell_for_staging_in_temp
+  description: Use living off the land tools to zip a file and stage it in the Windows
+    temporary folder for later exfiltration
+  condition: ([HostApplication] =~ ['.*Compress.*Archive.*.*']) && ([HostApplication]
+    =~ ['.*.*.*Path.*.*']) && ([HostApplication] =~ ['.*.*.*DestinationPath.*.*'])
+    && ([HostApplication] =~ ['.*.*env.*TEMP.*.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,collection,t1074,001
+  exttype: SIEM
+- name: renamed_powershell_under_powershell_channel
+  description: Detects renamed powershell
+  condition: ([EventID] == 400) && ([HostName] == ['ConsoleHost']) && (([HostApplication]
+    !~ ['powershell.exe.*']) || ([HostApplication] !~ ['C.*.*WINDOWS.*System32.*WindowsPowerShell.*v1.0.*powershell.exe.*']))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,execution,t1086,t1059,001
+  exttype: SIEM
+- name: netcat_the_powershell_version
+  description: Adversaries may use a non-application layer protocol for communication
+    between host and C2 server or among infected hosts within a network
+  condition: ([EventID] == 400) && (([HostApplication] =~ ['.*powercat.*.*']) || ([HostApplication]
+    =~ ['.*powercat.ps1.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1095
+  exttype: SIEM
+- name: delete_volume_shadow_copies_via_wmi_with_powershell
+  description: Shadow Copies deletion using operating systems utilities via PowerShell
+  condition: ([CommandLine] =~ ['.*Get.*WmiObject.*']) && ([CommandLine] =~ ['.*.*Win32.*Shadowcopy.*'])
+    && (([CommandLine] =~ ['.*Delete.*.*.*']) || ([CommandLine] =~ ['.*Remove.*WmiObject.*']))
+    && ([EventID] == 400)
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,impact,t1490
+  exttype: SIEM
+- name: suspicious_xor_encoded_powershell_command_line
+  description: Detects suspicious powershell process which includes bxor command,
+    alternative obfuscation method to b64 encoded commands.
+  condition: ([EventID] == 400) && ([HostName] == ['ConsoleHost']) && (([CommandLine]
+    =~ ['.*bxor.*']) || ([CommandLine] =~ ['.*join.*']) || ([CommandLine] =~ ['.*char.*']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: alternate_powershell_hosts
+  description: Detects alternate PowerShell hosts potentially bypassing detections
+    looking for powershell.exe
+  condition: ([EventID] == 400) && ([HostApplication] =~ ['.*']) && ([HostApplication]
+    !~ ['.*powershell.exe'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: suspicious_powershell_download
+  description: Detects suspicious PowerShell download command
+  condition: ([EventID] == 400) && ([HostApplication] =~ ['.*System.Net.WebClient.*'])
+    && ([HostApplication] =~ ['.*.DownloadFile.*.*']) || ([HostApplication] =~ ['.*.DownloadString.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086
+  exttype: SIEM
+- name: tamper_windows_defender
+  description: Attempting to disable scheduled scanning and other parts of windows
+    defender atp.
+  condition: ([EventID] == 600) && ([HostApplication] =~ ['.*Set.*MpPreference.*'])
+    && (([HostApplication] =~ ['.*.*DisableRealtimeMonitoring.*1.*']) || ([HostApplication]
+    =~ ['.*.*DisableBehaviorMonitoring.*1.*']) || ([HostApplication] =~ ['.*.*DisableScriptScanning.*1.*'])
+    || ([HostApplication] =~ ['.*.*DisableBlockAtFirstSeen.*1.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,t1562,001
+  exttype: SIEM
+- name: remote_powershell_session
+  description: Detects remote PowerShell sessions
+  condition: ([EventID] == 400) && ([HostName] == ['ServerRemoteHost']) && ([HostApplication]
+    =~ ['.*wsmprovhost.exe.*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1059,001,t1086,lateral_movement,t1021,006,t1028
+  exttype: SIEM
+- name: powershell_downgrade_attack
+  description: Detects PowerShell downgrade attack by comparing the host versions
+    with the actually used engine version 2.0
+  condition: ([EventID] == 400) && ([EngineVersion] =~ ['2..*']) && ([HostVersion]
+    !~ ['2..*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,execution,t1059,001,t1086
+  exttype: SIEM
+- name: powershell_called_from_an_executable_version_mismatch
+  description: Detects PowerShell called from an executable by the version mismatch
+    method
+  condition: ([EventID] == 400) && (([EngineVersion] =~ ['2..*']) || ([EngineVersion]
+    =~ ['4..*']) || ([EngineVersion] =~ ['5..*'])) && ([HostVersion] =~ ['3..*'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,defense_evasion,execution,t1059,001,t1086
+  exttype: SIEM

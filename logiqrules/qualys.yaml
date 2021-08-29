@@ -1,0 +1,41 @@
+name: qualys
+applications: ""
+definitions:
+- name: host_without_firewall
+  description: Host Without Firewall. Alert means not complied. Sigma for Qualys vulnerability
+    scanner. Scan type - Vulnerability Management.
+  condition: ([event.category] == ['Security Policy']) && ([host.scan.vuln_name] =~
+    ['Firewall.*Product.*Not.*Detected.*'])
+  level: low
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM
+- name: default_credentials_usage
+  description: Before deploying any new asset, change all default passwords to have
+    values consistent with administrative level accounts. Sigma detects default credentials
+    usage. Sigma for Qualys vulnerability scanner. Scan type - Vulnerability Management.
+  condition: (([host.scan.vuln] == 10693) || ([host.scan.vuln] == 11507) || ([host.scan.vuln]
+    == 11633) || ([host.scan.vuln] == 11804) || ([host.scan.vuln] == 11821) || ([host.scan.vuln]
+    == 11847) || ([host.scan.vuln] == 11867) || ([host.scan.vuln] == 11931) || ([host.scan.vuln]
+    == 11935) || ([host.scan.vuln] == 11950) || ([host.scan.vuln] == 12541) || ([host.scan.vuln]
+    == 12558) || ([host.scan.vuln] == 12559) || ([host.scan.vuln] == 12560) || ([host.scan.vuln]
+    == 12562) || ([host.scan.vuln] == 12563) || ([host.scan.vuln] == 12565) || ([host.scan.vuln]
+    == 12587) || ([host.scan.vuln] == 12590) || ([host.scan.vuln] == 12599) || ([host.scan.vuln]
+    == 12702) || ([host.scan.vuln] == 12705) || ([host.scan.vuln] == 12706) || ([host.scan.vuln]
+    == 12907) || ([host.scan.vuln] == 12928) || ([host.scan.vuln] == 12929) || ([host.scan.vuln]
+    == 13053) || ([host.scan.vuln] == 13178) || ([host.scan.vuln] == 13200) || ([host.scan.vuln]
+    == 13218) || ([host.scan.vuln] == 13241) || ([host.scan.vuln] == 13253) || ([host.scan.vuln]
+    == 13274) || ([host.scan.vuln] == 13296) || ([host.scan.vuln] == 13301) || ([host.scan.vuln]
+    == 13327) || ([host.scan.vuln] == 13373) || ([host.scan.vuln] == 13374) || ([host.scan.vuln]
+    == 13409) || ([host.scan.vuln] == 13530) || ([host.scan.vuln] == 13532) || ([host.scan.vuln]
+    == 20065) || ([host.scan.vuln] == 20073) || ([host.scan.vuln] == 20081) || ([host.scan.vuln]
+    == 27202) || ([host.scan.vuln] == 27358) || ([host.scan.vuln] == 38702) || ([host.scan.vuln]
+    == 38719) || ([host.scan.vuln] == 42045) || ([host.scan.vuln] == 42417) || ([host.scan.vuln]
+    == 43029) || ([host.scan.vuln] == 43220) || ([host.scan.vuln] == 43221) || ([host.scan.vuln]
+    == 43222) || ([host.scan.vuln] == 43223) || ([host.scan.vuln] == 43225) || ([host.scan.vuln]
+    == 43246) || ([host.scan.vuln] == 43431) || ([host.scan.vuln] == 43484) || ([host.scan.vuln]
+    == 86857) || ([host.scan.vuln] == 87098) || ([host.scan.vuln] == 87106))
+  level: medium
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM

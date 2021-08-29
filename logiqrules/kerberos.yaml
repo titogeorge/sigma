@@ -1,0 +1,12 @@
+name: kerberos
+applications: ""
+definitions:
+- name: kerberos_network_traffic_rc4_ticket_encryption
+  description: Detects kerberos TGS request using RC4 encryption which may be indicative
+    of kerberoasting
+  condition: ([request_type] == ['TGS']) && ([cipher] == ['rc4-hmac']) && ([service]
+    !~ ['.*.*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1208,t1558,003
+  exttype: SIEM

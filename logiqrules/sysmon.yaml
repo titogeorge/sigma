@@ -1,0 +1,30 @@
+name: sysmon
+applications: ""
+definitions:
+- name: powershell_scripts_installed_as_services
+  description: Detects powershell script installed as a Service
+  condition: ([EventID] == 6) && (([ServiceFileName] =~ ['.*powershell.*']) || ([ServiceFileName]
+    =~ ['.*pwsh.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,execution,t1569,002
+  exttype: SIEM
+- name: t1021_dcom_internetexplorer_application_iertutil_dll_hijack
+  description: Detects a threat actor creating a file named `iertutil.dll` in the
+    `C:\Program Files\Internet Explorer\` directory over the network and loading it
+    for a DCOM InternetExplorer DLL Hijack scenario.
+  condition: ([EventID] == 11) && ([Image] == ['System']) && ([TargetFilename] =~
+    ['.*.*Internet.*Explorer.*iertutil.dll']) || ([EventID] == 7) && ([Image] =~ ['.*.*Internet.*Explorer.*iexplore.exe'])
+    && ([ImageLoaded] =~ ['.*.*Internet.*Explorer.*iertutil.dll'])
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,lateral_movement,t1021,002,003
+  exttype: SIEM
+- name: accessing_winapi_in_powershell_for_credentials_dumping
+  description: Detects Accessing to lsass.exe by Powershell
+  condition: (([EventID] == 8) || ([EventID] == 10)) && ([SourceImage] =~ ['.*.*powershell.exe'])
+    && ([TargetImage] =~ ['.*.*lsass.exe'])
+  level: high
+  ruletype: EVALUATE
+  tags: attack,credential_access,t1003,001
+  exttype: SIEM

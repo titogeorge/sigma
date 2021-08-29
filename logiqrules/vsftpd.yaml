@@ -1,0 +1,20 @@
+name: vsftpd
+applications: ""
+definitions:
+- name: suspicious_vsftpd_error_messages
+  description: Detects suspicious VSFTPD error messages that indicate a fatal or suspicious
+    error that could be caused by exploiting attempts
+  condition: message =~ 'Connection.*refused.*.*too.*many.*sessions.*for.*this.*address.'
+    || message =~ 'Connection.*refused.*.*tcp.*wrappers.*denial.' || message =~ 'Bad.*HTTP.*verb.'
+    || message =~ 'port.*and.*pasv.*both.*active' || message =~ 'pasv.*and.*port.*both.*active'
+    || message =~ 'Transfer.*done.*.*but.*failed.*to.*open.*directory.*.' || message
+    =~ 'Could.*not.*set.*file.*modification.*time.' || message =~ 'bug.*.*pid.*active.*in.*ptrace.*sandbox.*free'
+    || message =~ 'PTRACE.*SETOPTIONS.*failure' || message =~ 'weird.*status.*' ||
+    message =~ 'couldn.*t.*handle.*sandbox.*event' || message =~ 'syscall.*.*.*out.*of.*bounds'
+    || message =~ 'syscall.*not.*permitted.*' || message =~ 'syscall.*validate.*failed.*'
+    || message =~ 'Input.*line.*too.*long.' || message =~ 'poor.*buffer.*accounting.*in.*str.*netfd.*alloc'
+    || message =~ 'vsf.*sysutil.*read.*loop'
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1190
+  exttype: SIEM

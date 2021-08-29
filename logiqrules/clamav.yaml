@@ -1,0 +1,11 @@
+name: clamav
+applications: ""
+definitions:
+- name: relevant_clamav_message
+  description: Detects relevant ClamAV messages
+  condition: message =~ 'Trojan.*FOUND' || message =~ 'VirTool.*FOUND' || message
+    =~ 'Webshell.*FOUND' || message =~ 'Rootkit.*FOUND' || message =~ 'Htran.*FOUND'
+  level: high
+  ruletype: EVALUATE
+  tags: ""
+  exttype: SIEM

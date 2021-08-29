@@ -1,0 +1,10 @@
+name: driver-framework
+applications: ""
+definitions:
+- name: usb_device_plugged
+  description: Detects plugged USB devices
+  condition: (([EventID] == 2003) || ([EventID] == 2100) || ([EventID] == 2102))
+  level: low
+  ruletype: EVALUATE
+  tags: attack,initial_access,t1200
+  exttype: SIEM

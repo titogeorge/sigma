@@ -1,0 +1,122 @@
+name: dns
+applications: ""
+definitions:
+- name: dns_txt_answer_with_possible_execution_strings
+  description: Detects strings used in command execution in DNS TXT Answer
+  condition: ([record_type] == ['TXT']) && (([answer] =~ ['.*IEX.*']) || ([answer]
+    =~ ['.*Invoke.*Expression.*']) || ([answer] =~ ['.*cmd.exe.*']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,004
+  exttype: SIEM
+- name: suspicious_dns_z_flag_bit_set
+  description: 'The DNS Z flag is bit within the DNS protocol header that is, per
+    the IETF design, meant to be used reserved (unused). Although recently it has
+    been used in DNSSec, the value being set to anything other than 0 should be rare.
+    Otherwise if it is set to non 0 and DNSSec is being used, then excluding the legitimate
+    domains is low effort and high reward. Determine if multiple of these files were
+    accessed in a short period of time to further enhance the possibility of seeing
+    if this was a one off or the possibility of larger sensitive file gathering. This
+    Sigma query is designed to accompany the Corelight Threat Hunting Guide, which
+    can be found here: https://www3.corelight.com/corelights-introductory-guide-to-threat-hunting-with-zeek-bro-logs'
+  condition: ([Z] == ['0']) && ([query] =~ ['.*..*']) && (([query] !~ ['.*.arpa'])
+    || ([query] !~ ['.*.local']) || ([query] !~ ['.*.ultradns.net']) || ([query] !~
+    ['.*.twtrdns.net']) || ([query] !~ ['.*.azuredns.*prd.info']) || ([query] !~ ['.*.azure.*dns.com'])
+    || ([query] !~ ['.*.azuredns.*ff.info']) || ([query] !~ ['.*.azuredns.*ff.org'])
+    || ([query] !~ ['.*.azuregov.*dns.org'])) || (([qtype_name] !~ ['NS']) || ([qtype_name]
+    !~ ['ns'])) || ([answers] !~ ['.*.*.*x00']) || (([id.resp_p] !~ ['137']) || ([id.resp_p]
+    !~ ['138']) || ([id.resp_p] !~ ['139']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,t1094,t1095,t1043,command_and_control
+  exttype: SIEM
+- name: dns_events_related_to_mining_pools
+  description: Identifies clients that may be performing DNS lookups associated with
+    common currency mining pools.
+  condition: (([query] =~ ['.*monerohash.com']) || ([query] =~ ['.*do.*dear.com'])
+    || ([query] =~ ['.*xmrminerpro.com']) || ([query] =~ ['.*secumine.net']) || ([query]
+    =~ ['.*xmrpool.com']) || ([query] =~ ['.*minexmr.org']) || ([query] =~ ['.*hashanywhere.com'])
+    || ([query] =~ ['.*xmrget.com']) || ([query] =~ ['.*mininglottery.eu']) || ([query]
+    =~ ['.*minergate.com']) || ([query] =~ ['.*moriaxmr.com']) || ([query] =~ ['.*multipooler.com'])
+    || ([query] =~ ['.*moneropools.com']) || ([query] =~ ['.*xmrpool.eu']) || ([query]
+    =~ ['.*coolmining.club']) || ([query] =~ ['.*supportxmr.com']) || ([query] =~
+    ['.*minexmr.com']) || ([query] =~ ['.*hashvault.pro']) || ([query] =~ ['.*xmrpool.net'])
+    || ([query] =~ ['.*crypto.*pool.fr']) || ([query] =~ ['.*xmr.pt']) || ([query]
+    =~ ['.*miner.rocks']) || ([query] =~ ['.*walpool.com']) || ([query] =~ ['.*herominers.com'])
+    || ([query] =~ ['.*gntl.co.uk']) || ([query] =~ ['.*semipool.com']) || ([query]
+    =~ ['.*coinfoundry.org']) || ([query] =~ ['.*cryptoknight.cc']) || ([query] =~
+    ['.*fairhash.org']) || ([query] =~ ['.*baikalmine.com']) || ([query] =~ ['.*tubepool.xyz'])
+    || ([query] =~ ['.*fairpool.xyz']) || ([query] =~ ['.*asiapool.io']) || ([query]
+    =~ ['.*coinpoolit.webhop.me']) || ([query] =~ ['.*nanopool.org']) || ([query]
+    =~ ['.*moneropool.com']) || ([query] =~ ['.*miner.center']) || ([query] =~ ['.*prohash.net'])
+    || ([query] =~ ['.*poolto.be']) || ([query] =~ ['.*cryptoescrow.eu']) || ([query]
+    =~ ['.*monerominers.net']) || ([query] =~ ['.*cryptonotepool.org']) || ([query]
+    =~ ['.*extrmepool.org']) || ([query] =~ ['.*webcoin.me']) || ([query] =~ ['.*kippo.eu'])
+    || ([query] =~ ['.*hashinvest.ws']) || ([query] =~ ['.*monero.farm']) || ([query]
+    =~ ['.*linux.*repository.*updates.com']) || ([query] =~ ['.*1gh.com']) || ([query]
+    =~ ['.*dwarfpool.com']) || ([query] =~ ['.*hash.*to.*coins.com']) || ([query]
+    =~ ['.*pool.*proxy.com']) || ([query] =~ ['.*hashfor.cash']) || ([query] =~ ['.*fairpool.cloud'])
+    || ([query] =~ ['.*litecoinpool.org']) || ([query] =~ ['.*mineshaft.ml']) || ([query]
+    =~ ['.*abcxyz.stream']) || ([query] =~ ['.*moneropool.ru']) || ([query] =~ ['.*cryptonotepool.org.uk'])
+    || ([query] =~ ['.*extremepool.org']) || ([query] =~ ['.*extremehash.com']) ||
+    ([query] =~ ['.*hashinvest.net']) || ([query] =~ ['.*unipool.pro']) || ([query]
+    =~ ['.*crypto.*pools.org']) || ([query] =~ ['.*monero.net']) || ([query] =~ ['.*backup.*pool.com'])
+    || ([query] =~ ['.*mooo.com']) || ([query] =~ ['.*freeyy.me']) || ([query] =~
+    ['.*cryptonight.net']) || ([query] =~ ['.*shscrypto.net'])) && (([answers] !~
+    ['127.0.0.1']) || ([answers] !~ ['0.0.0.0'])) || ([rejected] == ['true'])
+  level: low
+  ruletype: EVALUATE
+  tags: attack,t1035,t1569,002,t1496
+  exttype: SIEM
+- name: dns_tor_proxies
+  description: Identifies IPs performing DNS lookups associated with common Tor proxies.
+  condition: (([query] =~ ['tor2web.org']) || ([query] =~ ['tor2web.com']) || ([query]
+    =~ ['torlink.co']) || ([query] =~ ['onion.to']) || ([query] =~ ['onion.ink'])
+    || ([query] =~ ['onion.cab']) || ([query] =~ ['onion.nu']) || ([query] =~ ['onion.link'])
+    || ([query] =~ ['onion.it']) || ([query] =~ ['onion.city']) || ([query] =~ ['onion.direct'])
+    || ([query] =~ ['onion.top']) || ([query] =~ ['onion.casa']) || ([query] =~ ['onion.plus'])
+    || ([query] =~ ['onion.rip']) || ([query] =~ ['onion.dog']) || ([query] =~ ['tor2web.fi'])
+    || ([query] =~ ['tor2web.blutmagie.de']) || ([query] =~ ['onion.sh']) || ([query]
+    =~ ['onion.lu']) || ([query] =~ ['onion.pet']) || ([query] =~ ['t2w.pw']) || ([query]
+    =~ ['tor2web.ae.org']) || ([query] =~ ['tor2web.io']) || ([query] =~ ['tor2web.xyz'])
+    || ([query] =~ ['onion.lt']) || ([query] =~ ['s1.tor.*gateways.de']) || ([query]
+    =~ ['s2.tor.*gateways.de']) || ([query] =~ ['s3.tor.*gateways.de']) || ([query]
+    =~ ['s4.tor.*gateways.de']) || ([query] =~ ['s5.tor.*gateways.de']) || ([query]
+    =~ ['hiddenservice.net']))
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,t1048
+  exttype: SIEM
+- name: telegram_bot_api_request
+  description: Detects suspicious DNS queries to api.telegram.org used by Telegram
+    Bots of any kind
+  condition: ([query] == ['api.telegram.org'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1102,002
+  exttype: SIEM
+- name: wannacry_killswitch_domain
+  description: Detects wannacry killswitch domain dns queries
+  condition: (([query] =~ ['ifferfsodp9ifjaposdfjhgosurijfaewrwergwea.testing']) ||
+    ([query] =~ ['ifferfsodp9ifjaposdfjhgosurijfaewrwergwea.test']) || ([query] =~
+    ['ifferfsodp9ifjaposdfjhgosurijfaewrwergwea.com']) || ([query] =~ ['ayylmaotjhsstasdfasdfasdfasdfasdfasdfasdf.com'])
+    || ([query] =~ ['iuqssfsodp9ifjaposdfjhgosurijfaewrwergwea.com']) || ([query]
+    =~ ['']))
+  level: high
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,001
+  exttype: SIEM
+- name: suspicious_dns_query_with_b64_encoded_string
+  description: Detects suspicious DNS queries using base64 encoding
+  condition: ([query] =~ ['.*==..*'])
+  level: medium
+  ruletype: EVALUATE
+  tags: attack,exfiltration,t1048,003,command_and_control,t1071,004
+  exttype: SIEM
+- name: cobalt_strike_dns_beaconing
+  description: Detects suspicious DNS queries known from Cobalt Strike beacons
+  condition: (([query] =~ ['aaa.stage..*']) || ([query] =~ ['post.1.*']))
+  level: critical
+  ruletype: EVALUATE
+  tags: attack,command_and_control,t1071,004
+  exttype: SIEM
